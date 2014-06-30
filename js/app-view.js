@@ -1236,5 +1236,11 @@ api.on("notify", function(data){
 		}
 	} else if(data.type == "noPermission"){
 		$.modal("noPermission", "show");
+	} else if(data.type == "userRankChanged"){
+		if(data.target == currentTab){
+			if($("#usersMorePopover:visible").length){
+				layUsersMore(false); // rerender the user dropdown
+			}
+		}
 	}
 });

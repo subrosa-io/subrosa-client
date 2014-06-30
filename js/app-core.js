@@ -607,6 +607,8 @@ function commHandler(comm, target, isFromBuffer){
 						listItem.ranks[obj.targetUserUID] = obj.newRank;
 						if(obj.targetUserUID == appcore.uid)
 							listItem.myRank = obj.newRank;
+							
+						api.emit("notify", {type: "userRankChanged", target: target, uid: obj.targetUserUID, newRank: obj.newRank});
 					}
 				}
 				if(comm.type == 5 || comm.type == 2 || (comm.type >= 7 && comm.type <= 9) || comm.type == 11){
