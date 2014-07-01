@@ -46,12 +46,20 @@ function rtcStart(mediaStream, group, video){
 			continue;
 		createPeerConnection(callUsers[i]);
 		var pc = apprtc.pc[callUsers[i]];
-		pc.addStream(mediaStream);
+		try {
+			pc.addStream(mediaStream);
+		} catch (error) {
+			alert("Error while sending mediaStream when I'm joining: " + error + " ; mediastream has " + apprtc.mediaStream.getAudioTracks().length + " audio tracks.");
+		}
 	}
 }
 function rtcUserJoin(uid){
 	createPeerConnection(uid);
-	apprtc.pc[uid].addStream(apprtc.mediaStream);
+	try {
+		apprtc.pc[uid].addStream(apprtc.mediaStream);
+	} catch (error) { 
+		alert("Error while sending mediaStream to new peer: " + error + " ; mediastream has " + apprtc.mediaStream.getAudioTracks().length + " audio tracks.");
+	}
 }
 function rtcUserQuit(uid){
 	if(apprtc.pc[uid]){

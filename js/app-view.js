@@ -365,8 +365,7 @@ function mainAppHooks(){
 	
 	$("#convInput").keydown(function(event){
 		if(event.keyCode == 13){
-			if(event.shiftKey){
-			} else {
+			if(!event.shiftKey){
 				event.preventDefault();
 				var layContentAfter = false;
 				if(!appcore.profileBlob.conversations[currentTab])
@@ -388,6 +387,34 @@ function mainAppHooks(){
 		}
 	});
 	api.on("refreshTypingDisplay", refreshTypingDisplay);
+	
+	$("#convText").on("click", ".messageEditButton", function(){
+		$(this).hide();
+		$(this).parent().find(".messageEditCancelButton").show();
+		var $convMessageContent = $(this).parent().parent().find(".convMessageContent");
+		var originalContent = $convMessageContent.text();
+		$convMessageContent.html("<textarea class='messageEditArea' data-original='" + escapeText(originalContent)  + "'>" + escapeText(originalContent) + "</textarea>");
+		$convMessageContent.find("textarea").focus().moveCaretToEnd();
+	});
+	$("#convText").on("click", ".messageEditCancelButton", function(){
+		$(this).hide();
+		$(this).parent().find(".messageEditButton").show();
+		var $convMessageContent = $(this).parent().parent().find(".convMessageContent");
+		var originalContent = $convMessageContent.find("textarea.messageEditArea").attr("data-original");
+		$(this).parent().parent().find(".convMessageContent").html(originalContent);
+	});
+	$("#convText").on("keydown", ".messageEditArea", function(event){
+		var replaceTimestamp = $(this).parent().parent().attr("data-timestamp");
+		if(event.keyCode == 13){
+			if(!event.shiftKey){
+				event.preventDefault();
+				$(this).parent().parent().find(".messageEditCancelButton").click();
+				api.emit("editText", {target: currentTab, newMessage: $(this).val(), replaceTimestamp: replaceTimestamp});
+				// revert to message (instead of the textarea)
+			}
+		}
+	});
+	
 	$("#encInfo").click(function(event){
 		$(this).popover($("#encInfoPopover"));
 		event.preventDefault();
@@ -755,8 +782,10 @@ function newText(data){
 	
 	var convMessageUser = data.user;
 	var convMessageUserShow = data.userShow;
+	var isChatMessage = !(data.userShow == "*"); // messages with * userShow are not chat (type 2) messages
 	var convMessageContent = data.message;
 	var convMessageMeta = (data.timestamp ? "<span title='" + fullTime(data.timestamp) + "'>" + friendlyTime(data.timestamp) + "</span>" : "");
+	var convMessageActions = (data.isMe && data.userShow != "*" ? "<div class='messageEditButton tinyButton'>Edit</div> <div class='messageEditCancelButton tinyButton' style='display: none'>Cancel</div>" : "");
 	var newDivider = true;
 	var lapseDivider = "";
 	
@@ -786,7 +815,7 @@ function newText(data){
 	}
 	convBodyHolders[data.target].lastUser = data.user;
 	
-	var htmlBuild = lapseDivider + "<div class='convMessage " + (data.isMe ? "myMessage " : "") + (data.small ? "smallMessage " : "") + (newDivider ? "newDivider " : "") + "' data-unread='" + (data.unread && (data.target != currentTab)) + "' style='background-color:" + data.bgColor + "'><div class='newOrb'></div><div class='convMessageUser'>" + convMessageUserShow + "</div><div class='convMessageContent' style='width:" + lastMessageContentWidth + "px'>" + convMessageContent + "</div><div class='convMessageMeta'" + ">" + convMessageMeta + "</span></div></div>";
+	var htmlBuild = lapseDivider + "<div class='convMessage " + (data.isMe ? "myMessage " : "") + (data.small ? "smallMessage " : "") + (newDivider ? "newDivider " : "") + (isChatMessage ? "chatMessage " : "") + "' data-unread='" + (data.unread && (data.target != currentTab)) + "' style='background-color:" + data.bgColor + "' data-timestamp='" + data.timestamp + "' data-user='" + convMessageUser + "'><div class='newOrb'></div><div class='convMessageActions'>" + convMessageActions + "</div><div class='convMessageUser'>" + convMessageUserShow + "</div><div class='convMessageContent' style='width:" + lastMessageContentWidth + "px'>" + convMessageContent + "</div><div class='convMessageMeta'" + ">" + convMessageMeta + "</span></div></div>";
 		
 	if(data.isFromBuffer){
 		convBodyHolders[data.target].buffer.push(htmlBuild);
@@ -800,7 +829,7 @@ function newText(data){
 			convBodyHolders[data.target].live.splice(0, 1); 
 		}
 		if(data.target == currentTab){
-			$(".convMessage:first").remove();
+			$(".convMessage:first").remove(); // only keep last 300 messages
 		}
 	}
 		
@@ -831,6 +860,43 @@ function newText(data){
 		api.emit("notify", {type: "newMessage", uid: data.user, target: data.target, displayname: data.userShow, message: convMessageContent});
 	}
 }
+api.on("replaceText", function(data){
+	if(data.target == currentTab){
+		var $theMessage = $(".convMessage[data-timestamp='" + data.replaceTimestamp + "'].chatMessage");
+		if($theMessage.length){
+			if($theMessage.attr("data-user") == data.user){
+				$theMessage.find(".convMessageContent").html(data.newMessage);
+				$theMessage.find(".convMessageContent").addClass("edited");
+			}
+		}
+	}
+	// edit convBodyHolders - due to the way it's set up, editing messages is quite 'hacky'.
+	// good candidate for a refactor.
+	if(convBodyHolders[data.target]){
+		var replaceHTML = function(htmlString){
+			$("#htmlToText").html(htmlString);
+			$convMessage = $("#htmlToText").find(".convMessage");
+			if($convMessage.length &&  $convMessage.hasClass("chatMessage") && $convMessage.attr("data-user") == data.user && $convMessage.attr("data-timestamp") == data.replaceTimestamp){
+				$convMessage.find(".convMessageContent").html(data.newMessage);
+				$convMessage.find(".convMessageContent").addClass("edited");
+				return $("#htmlToText").html();
+			} else {
+				return htmlString;
+			}
+		}
+		for(var i in convBodyHolders[data.target].buffer){
+			if(convBodyHolders[data.target].buffer[i].indexOf(data.replaceTimestamp) != -1){
+				convBodyHolders[data.target].buffer[i] = replaceHTML(convBodyHolders[data.target].buffer[i]);
+			}
+		}
+		for(var i in convBodyHolders[data.target].live){
+			if(convBodyHolders[data.target].live[i].indexOf(data.replaceTimestamp) != -1){
+				convBodyHolders[data.target].live[i] = replaceHTML(convBodyHolders[data.target].live[i]);
+			}
+		}
+		$("#htmlToText").html("");
+	}
+});
 function loggedInCalls(){
 	var myListItem = $(".sidebarListItem[data-item='me']");
 	myListItem.find(".listItemIcon").attr("data-status", appcore.status);

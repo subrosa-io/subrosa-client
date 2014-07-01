@@ -106,6 +106,17 @@ function keepPosModals(){
 $("#overlay,.modalClose").click(function(){
 	(activeModal && $.modal('', 'hide'));
 });
+jQuery.fn.moveCaretToEnd = function(){
+	var el = $(this)[0];
+    if (typeof el.selectionStart == "number") {
+        el.selectionStart = el.selectionEnd = el.value.length;
+    } else if (typeof el.createTextRange != "undefined") {
+        el.focus();
+        var range = el.createTextRange();
+        range.collapse(false);
+        range.select();
+    }
+}
 jQuery.fn.draggable = function(){
 	var dragging = false;
 	var lastPos = [0,0];

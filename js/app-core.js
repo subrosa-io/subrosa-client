@@ -14,7 +14,7 @@ var api = {
 		this.map[type].push(handler)
 	}
 };
-var appcore = {version: 0.22, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], userList: [], noListBuffer: [], bgColorCache: []};
+var appcore = {version: 0.23, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], bgColorCache: []};
 appcore.sockemit = function(type, message){
 	if(!appcore.sock){
 		throw new Error("No socket is defined.");
@@ -501,6 +501,11 @@ function commHandler(comm, target, isFromBuffer){
 							}
 						}
 					}
+					if(obj.replaceTimestamp){
+						appcore.bufferTimestampReplace[obj.replaceTimestamp] = {target: target, newMessage: theMessage, replaceTimestamp: obj.replaceTimestamp, user: comm.sender, replacedTime: comm.time}
+						api.emit("replaceText", appcore.bufferTimestampReplace[obj.replaceTimestamp]);
+						return;
+					}
 				} else if(comm.type == 5){
 					if(obj.accepted){
 						theMessage = "<b>" + userDisplay + " accepted the contact request</b>";
@@ -573,7 +578,7 @@ function commHandler(comm, target, isFromBuffer){
 					} else {
 						if(obj.quit){
 							if(obj.kickedByUID){
-								theMessage = "<b>" + userDisplay + ' was kicked from the room by <a href="javascript:;" class="userLink dottedLnk" data-uid="' + escapeText(obj.kickedByUID) + '">' + escapeText(obj.kickedByUsername) + '</a>';
+								theMessage = "<b>" + userDisplay + ' was kicked from the room by <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.kickedByUID) + '">' + escapeText(obj.kickedByUsername) + '</a>';
 							} else {
 								theMessage = "<b>" + userDisplay + " left the room.</b>";
 							}
@@ -618,6 +623,10 @@ function commHandler(comm, target, isFromBuffer){
 					listItem.canMarkRead = true;
 					api.emit("newText", {user: comm.sender, userShow: (comm.type == 2 ? userDisplay : "*"), message: theMessage, isMe: isMe, timestamp: comm.time, target: target, unread: unread, isFromBuffer: isFromBuffer, bgColor: (appcore.bgColorCache[comm.sender] ? appcore.bgColorCache[comm.sender] : '')});
 					
+					if(comm.type == 2 && appcore.bufferTimestampReplace[comm.time] && appcore.bufferTimestampReplace[comm.time].target == target){
+						api.emit("replaceText", appcore.bufferTimestampReplace[comm.time]); // sanity checks performed by app-view.js
+						// Treat instaces where the original message wasn't loaded when the edit message came the same as if the original message was loaded - by sending a replaceText after the original message is loaded.
+					}
 					
 					if(listItem.users && listItem.users.indexOf(comm.sender) == -1 && (comm.type != 9 || !obj.quit)){
 						listItem.users.push(comm.sender);
@@ -833,6 +842,12 @@ api.on("sendText", function(data){
 		api.emit("sendComm", {target: data.target, type: 2, message: {msg: data.message}});
 		commHandler({type: 2, sender: appcore.uid, decrypted: {msg: data.message}, target: data.target});
 	}
+});
+api.on("editText", function(data){
+	if(data.newMessage.length == 0)
+		data.newMessage = ".";
+	api.emit("sendComm", {target: data.target, type: 2, message: {msg: data.newMessage, replaceTimestamp: data.replaceTimestamp}});
+	commHandler({type: 2, sender: appcore.uid, decrypted: {msg: data.newMessage, replaceTimestamp: data.replaceTimestamp}, target: data.target});
 });
 function escapeText(input){
 	return input.toString().replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
@@ -1133,6 +1148,7 @@ api.on("logout", function(data){
 	appcore.listHash = [];
 	appcore.profileBlob = {};
 	appcore.bufferTimestampIgnore = [];
+	appcore.bufferTimestampReplace = [];
 	appcore.userList = [];
 	appcore.noListBuffer = [];
 	appcore.bgColorCache = [];

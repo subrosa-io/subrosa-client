@@ -418,12 +418,51 @@ a:hover {
 	max-height: 64px;
 	overflow: auto;
 }
+.convMessage > .convMessageContent.edited:after {
+	content: "edited";
+	margin-left: 4px;
+	font-weight: bold;
+	font-size: 80%;
+	font-style: italic;
+}
 .convMessage > .convMessageMeta {
 	display: inline-block;
 	float: right;
 	width: 59px;
 	font-size: 85%;
 	color: #929292;
+}
+.convMessage > .convMessageActions {
+	display: none;
+	position: absolute;
+	right: 73px;
+	margin-top: -1px;
+}
+.convMessage:hover > .convMessageActions {
+	display: inline-block;
+}
+.convMessageActions > .messageEditButton {
+
+}
+.convMessageActions > .messageEditCancelButton {
+	background-color: #FC9287;
+	color: #FFF;
+}
+.tinyButton {
+	display: inline-block;
+	font-size: 85%;
+	background-color: #FAFAFA;
+	padding: 2px 4px 2px 4px;
+	border-radius: 5px;
+	border: 1px solid #CCC;
+	cursor: pointer;
+}
+.convMessage > .convMessageContent > textarea.messageEditArea {
+	width: 99%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	height: 25px;
+	margin: 0;
 }
 #convText.hideMeta > .convMessage > .convMessageMeta {
 	display: none;
@@ -434,7 +473,7 @@ a:hover {
 	top: 3px;
 	right: 4px;
 }
-.convMessage .newOrb {
+.convMessage > .newOrb {
 	background-color: #F0884D;
 	width: 6px;
 	height: 6px;
