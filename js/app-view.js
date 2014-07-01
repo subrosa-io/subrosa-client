@@ -1241,6 +1241,21 @@ api.on("notify", function(data){
 				appcore.list[appcore.listHash[data.target]].relatedNotifications.push(newNotification(icon, escapeText(data.displayname), data.message, 0, true));
 			}
 		}
+	} else if(data.type == "messageAck"){
+		// Replaces timestamp of HTML element & convBodyHolder to server timestamp
+		if(data.target == currentTab){
+			$(".convMessage[data-timestamp='" + data.clientTs + "']").attr("data-timestamp", data.serverTs);
+		}
+		if(convBodyHolders[data.target]){
+			for(var i in convBodyHolders[data.target].live){
+				var messageHTML = convBodyHolders[data.target].live[i];
+				// user cannot input ' , it's converted to the HTML entity
+				if(messageHTML.indexOf("data-timestamp='" + data.clientTs + "'") != -1){
+					convBodyHolders[data.target].live[i] = messageHTML.replace("data-timestamp='" + data.clientTs + "'", "data-timestamp='" + data.serverTs + "'");
+					return;
+				}
+			}
+		}
 	} else if(data.type == "changePassOldWrong"){
 		$("#editProfilePassOldFail").show().shake();
 	} else if(data.type == "bundleRecieved"){

@@ -839,8 +839,8 @@ api.on("sendText", function(data){
 		}
 		var currentTime = new Date().getTime();
 		listItem.lastRead = currentTime;
-		api.emit("sendComm", {target: data.target, type: 2, message: {msg: data.message}});
-		commHandler({type: 2, sender: appcore.uid, decrypted: {msg: data.message}, target: data.target});
+		api.emit("sendComm", {target: data.target, type: 2, message: {msg: data.message}, clientTs: currentTime});
+		commHandler({type: 2, sender: appcore.uid, decrypted: {msg: data.message}, target: data.target, time: currentTime});
 	}
 });
 api.on("editText", function(data){
@@ -1061,13 +1061,17 @@ api.on("sendComm", function(data){
 		cipher.finish();
 		var encrypted = cipher.output.data;
 		var inviteToRoom = (data.inviteToRoom ? data.inviteToRoom : undefined);
-		appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: iv, inviteToRoom: inviteToRoom});
+		var clientTs = (data.clientTs ? data.clientTs : undefined);
+		appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: iv, inviteToRoom: inviteToRoom, clientTs: clientTs});
 	} else {
 		throw new Error("No convKey available for " + listItem.id);
 	}
 });
 api.on("sendRawComm", function(data){
 	appcore.sockemit("raw", data);
+});
+appcore.sockon("ack", function(data){
+	api.emit("notify", {type: "messageAck", clientTs: data.cTs, serverTs: data.sTs, target: data.target});
 });
 appcore.sockon("getPubKey", function(data){
 	var listItem = appcore.list[appcore.listHash["conv" + sortUID(data.uid, appcore.uid)]];
