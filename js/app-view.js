@@ -375,6 +375,13 @@ function mainAppHooks(){
 					layContent(false, false); // encrypted info update (now encrypted)
 				$("#convInput").val("");
 			}
+		} else if(event.keyCode == 38){
+			if(!event.shiftKey && $("#convInput").val().length == 0){
+				// shortcut to edit last message
+				if($(".convMessage.myMessage.chatMessage:last").length){
+					$(".convMessage.myMessage:last").find(".messageEditButton").click();
+				}
+			}
 		}
 	});
 	$("#convInput").keyup(function(event){
@@ -390,18 +397,24 @@ function mainAppHooks(){
 	
 	$("#convText").on("click", ".messageEditButton", function(){
 		$(this).hide();
+		$(this).parent().addClass("show"); // force showing the other actions
 		$(this).parent().find(".messageEditCancelButton").show();
 		var $convMessageContent = $(this).parent().parent().find(".convMessageContent");
 		var originalContent = $convMessageContent.text();
 		$convMessageContent.html("<textarea class='messageEditArea' data-original='" + escapeText(originalContent)  + "'>" + escapeText(originalContent) + "</textarea>");
-		$convMessageContent.find("textarea").focus().moveCaretToEnd();
+		setTimeout(function(){
+			$convMessageContent.find("textarea").focus().moveCaretToEnd();
+		}, 1);
 	});
 	$("#convText").on("click", ".messageEditCancelButton", function(){
 		$(this).hide();
+		$(this).parent().removeClass("show");
 		$(this).parent().find(".messageEditButton").show();
 		var $convMessageContent = $(this).parent().parent().find(".convMessageContent");
 		var originalContent = $convMessageContent.find("textarea.messageEditArea").attr("data-original");
 		$(this).parent().parent().find(".convMessageContent").html(originalContent);
+		
+		$("#convInput").focus();
 	});
 	$("#convText").on("keydown", ".messageEditArea", function(event){
 		var replaceTimestamp = $(this).parent().parent().attr("data-timestamp");

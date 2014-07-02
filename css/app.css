@@ -438,7 +438,7 @@ a:hover {
 	right: 73px;
 	margin-top: -1px;
 }
-.convMessage:hover > .convMessageActions {
+.convMessage:hover > .convMessageActions, .convMessageActions.show {
 	display: inline-block;
 }
 .convMessageActions > .messageEditButton {
@@ -448,6 +448,9 @@ a:hover {
 	background-color: #FC9287;
 	color: #FFF;
 }
+.convMessageActions > .messageEditCancelButton:hover {
+	background-color: #F36F6F;
+}
 .tinyButton {
 	display: inline-block;
 	font-size: 85%;
@@ -456,6 +459,9 @@ a:hover {
 	border-radius: 5px;
 	border: 1px solid #CCC;
 	cursor: pointer;
+}
+.tinyButton:hover {
+	background-color: #FFFFFF;
 }
 .convMessage > .convMessageContent > textarea.messageEditArea {
 	width: 99%;
