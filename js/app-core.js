@@ -1015,11 +1015,20 @@ function decryptComm(comm, target){
 	try {
 		var key = appcore.profileBlob.conversations[target];
 		var cipher = forge.cipher.createDecipher('AES-GCM', key);
-		cipher.start({iv: comm.auxdata});
+		if(comm.auxdata.length == 16){
+			cipher.start({iv: comm.auxdata}); // v0.23 and earlier had no auth tag
+		} else {
+			var iv = comm.auxdata.substr(0, 16);
+			var tag = comm.auxdata.substr(16, 16);
+			cipher.start({iv: iv, tagLength: 128, tag: tag});
+		}
 		cipher.update(forge.util.createBuffer(comm.data));
-		cipher.finish();
+		if(!cipher.finish()){
+			// auth tag failed
+			throw new Error("Auth tag doesn't match.");
+		}
 	} catch (error) {
-		console.error("Failed to decrypt message in " + target, comm);
+		console.error("Failed to decrypt message in " + target, comm, error);
 		return {failedDecrypt: true, msg: "Failed to decrypt message."};
 	}
 	
@@ -1057,13 +1066,18 @@ api.on("sendComm", function(data){
 		var iv = forge.random.getBytesSync(16);
 		var cipher = forge.cipher.createCipher('AES-GCM', convKey); 
 		
-		cipher.start({iv: iv});
+		cipher.start({iv: iv, tagLength: 128});
 		cipher.update(forge.util.createBuffer(JSON.stringify(data.message)));
 		cipher.finish();
+		
 		var encrypted = cipher.output.data;
+		var tag = cipher.mode.tag.data;
+		
+		var auxdata = iv.toString() + tag.toString();
+		
 		var inviteToRoom = (data.inviteToRoom ? data.inviteToRoom : undefined);
 		var clientTs = (data.clientTs ? data.clientTs : undefined);
-		appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: iv, inviteToRoom: inviteToRoom, clientTs: clientTs});
+		appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: auxdata, inviteToRoom: inviteToRoom, clientTs: clientTs});
 	} else {
 		throw new Error("No convKey available for " + listItem.id);
 	}
