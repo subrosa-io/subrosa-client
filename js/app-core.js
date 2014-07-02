@@ -830,6 +830,7 @@ api.on("updateTypingState", function(data){
 api.on("sendText", function(data){
 	if(data.message.length == 0)
 		return;
+	data.message = data.message.substr(0, 1000);
 	var listItem = appcore.list[appcore.listHash[data.target]];
 	appcore.list[appcore.listHash[data.target]].typingState = "";
 	clearTimeout(listItem.stoppedTypingTimeout);

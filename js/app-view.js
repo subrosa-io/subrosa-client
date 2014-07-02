@@ -920,6 +920,8 @@ function loggedInCalls(){
 		$("#generalVolumeSlider").val(getProp("generalVolume")*100);
 	if(getProp("ringingVolume"))
 		$("#ringingVolumeSlider").val(getProp("ringingVolume")*100);
+	if(getProp("disableNotifications"))
+		$("#enableNotificationsCheckbox").attr("checked", false);
 }
 const shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function friendlyTime(timeMs){

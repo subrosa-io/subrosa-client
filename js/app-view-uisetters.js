@@ -512,6 +512,8 @@ function refreshTypingDisplay(){
 				typingText += typedArray.join(", ") + " has typed.";
 			}
 			$("#convTyping").text(typingText);
+		} else {
+			$("#convTyping").text("");
 		}
 	}
 }
