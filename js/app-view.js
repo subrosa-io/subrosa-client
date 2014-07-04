@@ -650,11 +650,11 @@ function mainAppHooks(){
 		var allowedTypes = ["image/png", "image/jpg", "image/jpeg"];
 		var target = $(this).attr("data-target");
 		if(event.target.files.length){
-			$(".uploadAvatarProgress[data-target='" + target + "'").show();
+			$(".uploadAvatarProgress[data-target='" + target + "']").show();
 			if(event.target.files[0].size > 2048 * 1024){
-				$(".uploadAvatarProgress[data-target='" + target + "'").text("File size is too large (Max: 2MB)");
+				$(".uploadAvatarProgress[data-target='" + target + "']").text("File size is too large (Max: 2MB)");
 			} else if(allowedTypes.indexOf(event.target.files[0].type) == -1){
-				$(".uploadAvatarProgress[data-target='" + target + "'").text("Only PNG and JPEG files are supported.");
+				$(".uploadAvatarProgress[data-target='" + target + "']").text("Only PNG and JPEG files are supported.");
 			} else {
 				$(this).hide();
 				var reader = new FileReader();
@@ -1184,14 +1184,14 @@ api.on("systemTimeInaccurate", function(){
 });
 api.on("avatarUploadProgress", function(data){
 	if(data.percent == 100){
-		$(".uploadAvatarProgress[data-target='" + data.target + "'").html("<br />Uploaded avatar.");
-		$(".avatarFile[data-target='" + data.target + "'").show();
+		$(".uploadAvatarProgress[data-target='" + data.target + "']").html("<br />Uploaded avatar.");
+		$(".avatarFile[data-target='" + data.target + "']").show();
 	} else if(data.percent == -1){
-		$(".uploadAvatarProgress[data-target='" + data.target + "'").hide();
-		$(".avatarFile[data-target='" + data.target + "'").show();
+		$(".uploadAvatarProgress[data-target='" + data.target + "']").hide();
+		$(".avatarFile[data-target='" + data.target + "']").show();
 			$.modal("avatarUploadFailed");
 	} else {
-		$(".uploadAvatarProgress[data-target='" + data.target + "'").text("Uploading (" + data.percent + "%)");
+		$(".uploadAvatarProgress[data-target='" + data.target + "']").text("Uploading (" + data.percent + "%)");
 	}
 });
 api.on("callUpdate", function(data){
