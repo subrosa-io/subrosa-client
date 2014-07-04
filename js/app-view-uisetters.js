@@ -89,21 +89,16 @@ function layContent(header, body){
 		
 		if(header){
 			if(listItem.id.indexOf("-") != -1){
-				convHeader.find("#convPicture").removeClass("hide").attr("data-status", (typeof listItem.status != "undefined" ? listItem.status : ""));
-				if(listItem.avatar){
-					convHeader.find("#convPicture")[0].src = listItem.avatar;
-				} else {
-					convHeader.find("#convPicture")[0].src = "img/noavatar.png";
-				}
+				convHeader.find("#convPicture").attr("data-status", (typeof listItem.status != "undefined" ? listItem.status : ""));
 				convHeader.find("#convDisplayName").text((listItem.displayname ? listItem.displayname : listItem.username));
 				convHeader.find("#convSubtitleStatus").show().text((typeof listItem.status != "undefined" ? statusText[listItem.status] : "Not contacts"));
 				convHeader.find("#convSubtitleUsers").hide();
 				
-				convHeader.find("#inviteButton").hide();
+				convHeader.find("#inviteButton, #editGroupChat, #removeFromListRoom").hide();
 				convHeader.find("#newGroupChat, #blockUser").show();
 			
 				if(listItem.contact == 2){
-					convHeader.find("#addContactButton,#addContactFakeButton,#removeFromList,#removeFromListRoom,#acceptContactButton").hide();
+					convHeader.find("#addContactButton,#addContactFakeButton,#removeFromList,#acceptContactButton").hide();
 					convHeader.find("#voiceButton,#videoButton,#removeFromContacts").show();
 				} else if(listItem.contact == 1){
 					if(listItem.myRequest){
@@ -114,10 +109,10 @@ function layContent(header, body){
 						convHeader.find("#addContactFakeButton").hide();
 					}
 					convHeader.find("#removeFromList").show();
-					convHeader.find("#voiceButton,#videoButton,#removeFromListRoom,#addContactButton,#removeFromContacts").hide();
+					convHeader.find("#voiceButton,#videoButton,#addContactButton,#removeFromContacts").hide();
 				} else if(listItem.contact == 0){
 					convHeader.find("#addContactButton,#removeFromList").show();
-					convHeader.find("#voiceButton,#videoButton,#removeFromListRoom,#addContactFakeButton,#removeFromContacts,#acceptContactButton").hide();
+					convHeader.find("#voiceButton,#videoButton,#addContactFakeButton,#removeFromContacts,#acceptContactButton").hide();
 					// pre generate key exchange message
 					api.emit("generateKeyExchange", listItem);
 				}
@@ -128,12 +123,24 @@ function layContent(header, body){
 					$("#unblockButton").hide();
 				}
 			} else {
-				convHeader.find("#convPicture").addClass("hide");
+				convHeader.find("#convPicture").attr("data-status", "");
 				convHeader.find("#convDisplayName").text(listItem.name);
 				layUsers();
 				
 				convHeader.find("#convSubtitleStatus,#addContactButton,#addContactFakeButton,#removeFromList,#removeFromContacts,#acceptContactButton,#newGroupChat,#unblockButton,#blockUser").hide();
 				convHeader.find("#convSubtitleUsers,#voiceButton,#videoButton,#removeFromListRoom,#inviteButton").show();
+				
+				if(listItem.myRank >= 4){
+					convHeader.find("#editGroupChat").show();
+				} else {
+					convHeader.find("#editGroupChat").hide();
+				}
+			}
+			
+			if(listItem.avatar){
+				convHeader.find("#convPicture")[0].src = listItem.avatar;
+			} else {
+				convHeader.find("#convPicture")[0].src = (listItem.id.indexOf("-") == -1 ? "img/group.png" : "img/noavatar.png");
 			}
 						
 			if(getProp(listItem.id + "-pinned")){
@@ -246,7 +253,7 @@ function layList(){
 			var thisPinned = getProp(item.id + "-pinned");
 			$(".sidebarListItem").each(function(){
 				var itemID = $(this).attr("data-item");
-				if(itemID == "me" || itemID == "searchElement" || itemID == "home" || itemID == "meta"){
+				if(itemID == "me" || itemID == "searchElement" || itemID == "home" || itemID == "meta" || itemID == "gedit"){
 					
 				} else {
 					var lastCommunication = Math.max(appcore.list[appcore.listHash[itemID]].lastMessage, appcore.list[appcore.listHash[itemID]].lastMyMessage);
@@ -295,7 +302,7 @@ function createItemHTML(type, item){
 			}
 			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv"><div class="unreadBadge">0</div><img src="' + (item.avatar ? escapeText(item.avatar) : 'img/noavatar.png') + '" class="listItemIcon" data-status="' + (typeof item.status != 'undefined' ? item.status : "") + '" /><span class="listItemTitle">' + escapeText(item.displayname || item.username) + '</span> ' + pinnedIcon + '<br /><span class="listItemSubtitle">' + escapeText(subtitle)  + '</span></div>';
 		} else {
-			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv"><div class="unreadBadge">0</div><img src="img/group.png" class="listItemIcon" data-status="room" /><span class="listItemTitle">' + escapeText(item.name) + '</span> ' + pinnedIcon + '<br /><span class="listItemSubtitle">' + (item.active ? '<span class="inCallSubtitle">Group call</span>' : "Group chat") + '</span></div>';
+			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv"><div class="unreadBadge">0</div><img src="' + (item.avatar ? escapeText(item.avatar) : 'img/group.png') + '" class="listItemIcon" data-status="room" /><span class="listItemTitle">' + escapeText(item.name) + '</span> ' + pinnedIcon + '<br /><span class="listItemSubtitle">' + (item.active ? '<span class="inCallSubtitle">Group call</span>' : "Group chat") + '</span></div>';
 		}
 	}
 }
@@ -367,6 +374,18 @@ function testRoomInviteConfirm(){
 		$("#roomInviteConfirm").addClass("disabled");
 	}
 }
+function layRoomEdit(id){
+	var listItem = appcore.list[appcore.listHash[id]];
+	$("#roomEditName").val(listItem.name);
+	$("#roomEditMenu").find(".avatarFile,.uploadAvatarProgress").attr("data-target", id);
+}
+function testRoomEditConfirm(){
+	if($("#roomEditName").val().length){
+		$("#roomEditConfirm").removeClass("disabled");
+	} else {
+		$("#roomEditConfirm").addClass("disabled");
+	}
+};
 var lastLayTime = 0;
 var layUsersTimeout = 0;
 function layUsers(){

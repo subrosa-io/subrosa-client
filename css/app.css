@@ -295,7 +295,7 @@ a:hover {
 #mainScreen .contentTab {
 	height: 100%;
 }
-#mainScreen .tab-home, #mainScreen .tab-meta {
+#mainScreen .tab-home, #mainScreen .tab-meta, #mainScreen .tab-gedit {
 	padding: 15px;
 }
 #mainLeftDivider {
@@ -588,7 +588,7 @@ a:hover {
 #editProfileHeader, #editProfileBack {
 	position: absolute;
 }
-#roomInviteMenu {
+#roomInviteMenu, #roomEditMenu {
 	height: 100%;
 }
 #roomInviteUserlist {

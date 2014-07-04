@@ -551,6 +551,16 @@ function mainAppHooks(){
 			changeTabTo($(this).attr("data-target"));
 		}
 	});
+	$("#roomInviteCancel,#roomEditCancel").click(function(){
+		changeTabTo(lastTab);
+	});
+	$("#roomEditName").keyup(testRoomEditConfirm);
+	$("#roomEditConfirm").click(function(){
+		if($(this).hasClass("disabled"))
+			return;
+		api.emit("changeGroupInfo", {target: lastTab, name: $("#roomEditName").val()});
+		changeTabTo(lastTab);
+	});
 	$("#convText").on("click", "#bufferMore", function(){
 		$(this).text("Loading..");
 		$(this).attr("data-scrollPos", $("#convText")[0].scrollHeight);
@@ -558,9 +568,6 @@ function mainAppHooks(){
 	});
 	$("#convText").on("click", ".verifyKey", function(){
 		api.emit("verifyKey", {target: currentTab});
-	});
-	$("#roomInviteCancel").click(function(){
-		changeTabTo(lastTab);
 	});
 	$("#convSubtitleUsersMore").click(function(){
 		$(this).popover($("#usersMorePopover"));
@@ -637,20 +644,21 @@ function mainAppHooks(){
 			setVideoMute(true);
 		}
 	});
-	$("#avatarFile").change(function(event){
+	$(".avatarFile").change(function(event){
 		var allowedTypes = ["image/png", "image/jpg", "image/jpeg"];
+		var target = $(this).attr("data-target");
 		if(event.target.files.length){
-			$("#uploadAvatarProgress").show();
+			$(".uploadAvatarProgress[data-target='" + target + "'").show();
 			if(event.target.files[0].size > 2048 * 1024){
-				$("#uploadAvatarProgress").text("File size is too large (Max: 2MB)");
+				$(".uploadAvatarProgress[data-target='" + target + "'").text("File size is too large (Max: 2MB)");
 			} else if(allowedTypes.indexOf(event.target.files[0].type) == -1){
-				$("#uploadAvatarProgress").text("Only PNG and JPEG files are supported.");
+				$(".uploadAvatarProgress[data-target='" + target + "'").text("Only PNG and JPEG files are supported.");
 			} else {
-				$("#avatarFile").hide();
+				$(this).hide();
 				var reader = new FileReader();
 				reader.onload = function(){
 					//reader.result;
-					api.emit("uploadAvatar", {data: reader.result});
+					api.emit("uploadAvatar", {data: reader.result, target: target});
 				}
 				reader.readAsBinaryString(event.target.files[0]);
 			}
@@ -660,7 +668,7 @@ function mainAppHooks(){
 		api.emit("logout", {});
 		$(".sidebarListItem").each(function(){
 			var dataItem = $(this).attr("data-item");
-			if(dataItem != "home" && dataItem != "searchElement" && dataItem != "meta" && dataItem != "me"){
+			if(dataItem != "home" && dataItem != "searchElement" && dataItem != "meta" && dataItem != "gedit" && dataItem != "me"){
 				$(this).remove();
 			}
 		});
@@ -777,6 +785,7 @@ function changeTabTo(tab){
 			$("#convInput").val("");
 		}
 	} else if(currentTrigger == "meta"){ // initalize where you call changeTabTo
+	} else if(currentTrigger == "gedit"){ // likewise
 	}
 	
 	layContent(true, true);
@@ -981,7 +990,7 @@ function searchChange(newSearchTerm){
 	var neverHide = ["me", "home", "searchElement"];
 	var alreadyInList = false;
 	$(".sidebarListItem").each(function(){
-		if($(this).attr("data-item") == "meta")
+		if($(this).attr("data-item") == "meta" || $(this).attr("data-item") == "gedit")
 			return; // always hide meta
 		if(neverHide.indexOf($(this).attr("data-item")) == -1){
 			var title = $(this).find(".listItemTitle").text().toLowerCase();
@@ -1082,6 +1091,9 @@ function convButtonClick(event){
 	} else if($(this).attr("id") == "newGroupChat"){
 		layRoomInviteUserList([appcore.list[appcore.listHash[currentTab]].uid], "");
 		changeTabTo("meta");
+	} else if($(this).attr("id") == "editGroupChat"){
+		layRoomEdit(currentTab);
+		changeTabTo("gedit");
 	} else if($(this).attr("id") == "inviteButton"){
 		layRoomInviteUserList([], currentTab);
 		changeTabTo("meta");
@@ -1168,16 +1180,16 @@ api.on("versionCheck", function(status){
 api.on("systemTimeInaccurate", function(){
 	$.modal("systemTimeInaccurate");
 });
-api.on("avatarUploadProgress", function(data){	
+api.on("avatarUploadProgress", function(data){
 	if(data.percent == 100){
-		$("#uploadAvatarProgress").html("<br />Uploaded avatar.");
-		$("#avatarFile").show();
+		$(".uploadAvatarProgress[data-target='" + data.target + "'").html("<br />Uploaded avatar.");
+		$(".avatarFile[data-target='" + data.target + "'").show();
 	} else if(data.percent == -1){
-		$("#uploadAvatarProgress").hide();
-		$("#avatarFile").show();
+		$(".uploadAvatarProgress[data-target='" + data.target + "'").hide();
+		$(".avatarFile[data-target='" + data.target + "'").show();
 			$.modal("avatarUploadFailed");
 	} else {
-		$("#uploadAvatarProgress").text("Uploading (" + data.percent + "%)");
+		$(".uploadAvatarProgress[data-target='" + data.target + "'").text("Uploading (" + data.percent + "%)");
 	}
 });
 api.on("callUpdate", function(data){
@@ -1243,7 +1255,11 @@ api.on("notify", function(data){
 		}
 		$(".sidebarListItem[data-item='conv" + sortUID(data.uid, appcore.uid) + "'] .listItemIcon").attr("data-status", data.newStatus == undefined ? '' : data.newStatus);
 	} else if(data.type == "displaynameChanged"){
-		setListItem("conv" + sortUID(data.uid, appcore.uid));
+		if(data.uid){
+			setListItem("conv" + sortUID(data.uid, appcore.uid));
+		} else {
+			setListItem(data.id);
+		}
 	} else if(data.type == "newMessage"){
 		if(data.target.indexOf("-") != -1 || data.target==currentTab){
 			var icon = getUserItem(data.uid).avatar || "img/noavatar.png";
@@ -1313,11 +1329,13 @@ api.on("notify", function(data){
 	} else if(data.type == "avatarUpdated"){
 		if(data.uid == appcore.uid){
 			$(".sidebarListItem[data-item=me]").find(".listItemIcon")[0].src = data.avatar;
-		} else {
+		} else if(data.uid){
 			$(".sidebarListItem[data-item='conv" + sortUID(appcore.uid, data.uid) + "']").find(".listItemIcon")[0].src = data.avatar;
 			if(currentTab.indexOf(data.uid) != -1){
 				layContent(true, false);
 			}
+		} else {
+			$(".sidebarListItem[data-item='" + data.id + "']").find(".listItemIcon")[0].src = data.avatar;
 		}
 	} else if(data.type == "verifyKeyInfo"){
 		$("#verifyKeyHash #main").text(data.hash.substr(0,8));;

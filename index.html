@@ -193,8 +193,8 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 							</div>
 							<div id="editProfileAvatar" style="display: none">
 								<strong>Upload new avatar</strong><br />
-								<input id="avatarFile" type="file" />
-								<span style="display: none" id="uploadAvatarProgress">Uploading (0%)</span><br />
+								<input class="avatarFile" type="file" data-target="self"/>
+								<span style="display: none" class="uploadAvatarProgress" data-target="self">Uploading (0%)</span><br />
 								<small>Your avatar is only shown to your contacts.</small>
 							</div>
 						</div>
@@ -213,6 +213,11 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 						<div class="sidebarListItem" data-item="meta" data-trigger="meta" style="display: none">
 							<span class="fa fa-plus listItemIcon"></span>
 							<span class="listItemTitle">New conversation</span><br />
+							<span class="listItemSubtitle"></span>
+						</div>
+						<div class="sidebarListItem" data-item="gedit" data-trigger="gedit" style="display: none">
+							<span class="fa fa-plus listItemIcon"></span>
+							<span class="listItemTitle">Edit group</span><br />
 							<span class="listItemSubtitle"></span>
 						</div>
 					</div>
@@ -273,6 +278,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 											<li id="removeFromList">Remove from list</li>
 											<li id="removeFromListRoom">Leave room</li>
 											<li id="newGroupChat">New group chat</li>
+											<li id="editGroupChat">Edit group info</li>
 											<li id="pinToList">Pin to list</li>
 											<li id="unpinFromList">Unpin from list</li>
 											<li id="blockUser">Block user</li>
@@ -353,7 +359,19 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 							<hr />
 							<button class="button button-primary" id="roomInviteConfirm"><span id="roomCreateBtnText">Create Group Chat</span><span id="roomAddBtnText">Invite</span></button> <button class="button" id="roomInviteCancel">Cancel</button>
 						</div>
-					</div> 
+					</div>
+					<div class="contentTab tab-gedit" style="display: none">
+						<div id="roomEditMenu">
+							<h2>Edit group chat</h2>
+							<hr />
+							<div>Room name</div>
+							<input type="text" id="roomEditName" maxlength="20" /><br /><br />
+							<div>New avatar <small>(takes immediate effect)</small></div>
+							<input class="avatarFile" type="file"/>
+							<span style="display: none" class="uploadAvatarProgress">Uploading (0%)</span><br /><br />
+							<button class="button button-primary" id="roomEditConfirm">Save changes</button> <button class="button" id="roomEditCancel">Cancel</button>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

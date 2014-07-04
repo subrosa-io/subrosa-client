@@ -14,7 +14,7 @@ var api = {
 		this.map[type].push(handler)
 	}
 };
-var appcore = {version: 0.23, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], bgColorCache: []};
+var appcore = {version: 0.23, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], bgColorCache: [], currentUploadTarget:""};
 appcore.sockemit = function(type, message){
 	if(!appcore.sock){
 		throw new Error("No socket is defined.");
@@ -329,6 +329,15 @@ api.on("changeProfile", function(data){
 	}
 	appcore.sockemit("changeProfile", data);
 });
+api.on("changeGroupInfo", function(data){
+	var listItem = appcore.list[appcore.listHash[data.target]];
+	if(data.name && listItem.name != data.name){
+		var oldName = listItem.name;
+		listItem.name = data.name.substr(0, 20);
+		api.emit("notify", {type: "displaynameChanged", id: data.target, newName: data.name.substr(0, 20), oldName: oldName});
+	}
+	appcore.sockemit("changeGroupInfo", data);
+});
 api.on("addContact", function(data){
 	if(data.id){
 		var listItem = appcore.list[appcore.listHash[data.id]];
@@ -578,7 +587,7 @@ function commHandler(comm, target, isFromBuffer){
 					} else {
 						if(obj.quit){
 							if(obj.kickedByUID){
-								theMessage = "<b>" + userDisplay + ' was kicked from the room by <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.kickedByUID) + '">' + escapeText(obj.kickedByUsername) + '</a>';
+								theMessage = "<b>" + userDisplay + ' was kicked from the room by <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.kickedByUID) + '">' + escapeText(obj.kickedByUsername) + '</a></b>';
 							} else {
 								theMessage = "<b>" + userDisplay + " left the room.</b>";
 							}
@@ -626,6 +635,7 @@ function commHandler(comm, target, isFromBuffer){
 					if(comm.type == 2 && appcore.bufferTimestampReplace[comm.time] && appcore.bufferTimestampReplace[comm.time].target == target){
 						api.emit("replaceText", appcore.bufferTimestampReplace[comm.time]); // sanity checks performed by app-view.js
 						// Treat instaces where the original message wasn't loaded when the edit message came the same as if the original message was loaded - by sending a replaceText after the original message is loaded.
+						delete appcore.bufferTimestampReplace[comm.time];
 					}
 					
 					if(listItem.users && listItem.users.indexOf(comm.sender) == -1 && (comm.type != 9 || !obj.quit)){
@@ -723,11 +733,23 @@ appcore.sockon("statusUpdate", function(data){
 		api.emit("notify", {type: "contactChange", uid: data.target, contact: data.contact});
 	}
 	if(typeof data.displayname != "undefined"){
-		api.emit("notify", {type: "displaynameChanged", uid: data.target, displayname: data.displayname, oldDisplayname: relevantList.displayname});
+		var oldDisplayname = relevantList.displayname;
 		relevantList.displayname = data.displayname;
+		api.emit("notify", {type: "displaynameChanged", uid: data.target, displayname: data.displayname, oldDisplayname: oldDisplayname});
 	}
 	
 	api.emit("lay", {id: "conv" + sortUID(appcore.uid, data.target)});
+});
+appcore.sockon("groupUpdate", function(data){
+	var relevantList = appcore.list[appcore.listHash[data.target]];
+	if(!relevantList)
+		return;
+	if(typeof data.name != "undefined"){
+		var oldName = relevantList.name;
+		relevantList.name = data.name;
+		api.emit("notify", {type: "displaynameChanged", id: data.target, name: relevantList.name, oldName: oldName});
+	}
+	api.emit("lay", {id: data.target});
 });
 appcore.sockon("commBundle", function(data){
 	var listItem = appcore.list[appcore.listHash[data.target]]
@@ -869,32 +891,43 @@ api.on("clearHistory", function(data){
 });
 api.on("uploadAvatar", function(data){
 	appcore.fileString = data.data;
+	appcore.currentUploadTarget = data.target;
 	appcore.partsTotal = Math.ceil(appcore.fileString.length/10240);
-	uploadPart();
+	uploadPart(true);
 });
 appcore.sockon("avatarSet", function(data){
 	if(data.error){
-		api.emit("avatarUploadProgress", {percent: -1});
+		api.emit("avatarUploadProgress", {percent: -1, target: data.target});
 	} else {
-		api.emit("avatarUploadProgress", {percent: 100});
-		appcore.avatar = data.newAvatar;
-		api.emit("notify", {type: "avatarUpdated", uid: appcore.uid, avatar: data.newAvatar});
+		api.emit("avatarUploadProgress", {percent: 100, target: data.target});
+		if(data.target == "self"){
+			appcore.avatar = data.newAvatar;
+			api.emit("notify", {type: "avatarUpdated", uid: appcore.uid, avatar: data.newAvatar});
+		} else {
+			appcore.list[appcore.listHash[data.target]].avatar = data.newAvatar;
+			api.emit("notify", {type: "avatarUpdated", id: data.target, avatar: data.newAvatar});
+		}
+		appcore.currentUploadTarget = "";
 	}
 });
 appcore.sockon("avatar", function(data){
-	var listItem = appcore.list[appcore.listHash["conv" + sortUID(appcore.uid, data.uid)]];
+	if(data.uid){
+		var listItem = appcore.list[appcore.listHash["conv" + sortUID(appcore.uid, data.uid)]];
+	} else if(data.id){ // group chat
+		var listItem = appcore.list[appcore.listHash[data.id]];
+	}
 	listItem.avatar = data.avatar;
-	api.emit("notify", {type: "avatarUpdated", uid: data.uid, avatar: data.avatar});
+	api.emit("notify", {type: "avatarUpdated", uid: data.uid, id: data.id, avatar: data.avatar});
 });
-function uploadPart(){
+function uploadPart(includeTarget){
 	var partsLeft = Math.ceil(appcore.fileString.length/10240);
 	var part = appcore.fileString.substr(0,10240);
 	appcore.fileString = appcore.fileString.substr(10240);
-	appcore.sockemit("filePart", {t: "a", p: partsLeft-1, d: part});
-	api.emit("avatarUploadProgress", {percent: Math.round(((appcore.partsTotal-partsLeft)/appcore.partsTotal)*100)});
+	appcore.sockemit("filePart", {t: "a", p: partsLeft-1, d: part, target: (includeTarget ? appcore.currentUploadTarget : undefined)});
+	api.emit("avatarUploadProgress", {percent: Math.round(((appcore.partsTotal-partsLeft)/appcore.partsTotal)*100), target: appcore.currentUploadTarget});
 }
 appcore.sockon("gotPart", function(data){
-	uploadPart();
+	uploadPart(false);
 });
 api.on("makeCall", function(data){
 	var listItem = appcore.list[appcore.listHash[data.target]];
