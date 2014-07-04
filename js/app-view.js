@@ -418,13 +418,15 @@ function mainAppHooks(){
 	});
 	$("#convText").on("keydown", ".messageEditArea", function(event){
 		var replaceTimestamp = $(this).parent().parent().attr("data-timestamp");
-		if(event.keyCode == 13){
+		if(event.keyCode == 13){ // enter
 			if(!event.shiftKey){
 				event.preventDefault();
 				$(this).parent().parent().find(".messageEditCancelButton").click();
 				api.emit("editText", {target: currentTab, newMessage: $(this).val(), replaceTimestamp: replaceTimestamp});
 				// revert to message (instead of the textarea)
 			}
+		} else if(event.keyCode == 27){ // escape
+			$(this).parent().parent().find(".messageEditCancelButton").click();
 		}
 	});
 	
