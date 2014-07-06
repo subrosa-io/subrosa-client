@@ -1300,5 +1300,8 @@ function getNameFromUID(uid){
 	}
 }
 function getProp(name){
+	if(!appcore.profileBlob.props)
+		return false;
+	
 	return appcore.profileBlob.props[name] || false;
 }
