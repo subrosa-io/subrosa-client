@@ -1245,6 +1245,13 @@ api.on("gotCaptcha", function(data){
 		console.log(data);
 	}
 });
+api.on("connectionState", function(data){
+	if(data.state == "connected"){
+		$("#disconnectedOverlay").hide();
+	} else {
+		$("#disconnectedOverlay").show();
+	}
+});
 api.on("notify", function(data){
 	if(data.type == "statusChanged"){
 		if(data.newStatus != 0 && !data.oldStatus){

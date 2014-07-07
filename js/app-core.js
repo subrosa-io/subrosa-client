@@ -52,6 +52,7 @@ api.on("connect", function(){
 				appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: appcore.derivedKeyHash, resendBlob: false});
 			for(var i in appcore.sockbuffer){ appcore.sock.send(JSON.stringify(appcore.sockbuffer[i])); };
 			appcore.sockbuffer = [];
+			api.emit("connectionState", {state: "connected"});
 		});
 		appcore.sock.on("message", function(data){
 			if(data[0] == "{"){
@@ -76,6 +77,7 @@ api.on("connect", function(){
 				appcore.reconnect=setInterval(function(){api.emit("connect");}, 1500)
 			}
 			closeEvents()
+			api.emit("connectionState", {state: "disconnected"});
 		});
 	}
 });
