@@ -121,7 +121,7 @@ jQuery.fn.draggable = function(){
 	var dragging = false;
 	var lastPos = [0,0];
 	$(this).mousedown(function(event){
-		if(event.target.tagName == "SELECT" || event.target.tagName == "P" || event.target.tagName == "SPAN")
+		if(event.target.tagName == "SELECT" || event.target.tagName == "P" || event.target.tagName == "SPAN" || event.target.tagName == "PRE")
 			return;
 		if(event.which===1){
 			dragging = true;

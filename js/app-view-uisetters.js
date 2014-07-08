@@ -251,7 +251,7 @@ function layList(){
 		if($(".sidebarListItem[data-item='" + item.id + "']").length == 0){
 			var added = false;
 			var thisPinned = getProp(item.id + "-pinned");
-			var thisName = $(".sidebarListItem[data-item='" + item.id + "']").find(".listItemTitle").text();
+			var thisName = item.name || item.displayname || item.username;
 			
 			$(".sidebarListItem").each(function(){
 				var itemID = $(this).attr("data-item");

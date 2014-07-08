@@ -14,7 +14,7 @@ var api = {
 		this.map[type].push(handler)
 	}
 };
-var appcore = {version: 0.24, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], bgColorCache: [], currentUploadTarget:""};
+var appcore = {version: 0.25, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], bgColorCache: [], currentUploadTarget:""};
 appcore.sockemit = function(type, message){
 	if(!appcore.sock){
 		throw new Error("No socket is defined.");
@@ -1236,12 +1236,16 @@ appcore.sockon("version", function(data){
 });
 var updateCheckerInterval = setInterval(function(){
 	appcore.sockemit("version", {});
-}, 4 * 60 * 1000);
+}, 30 * 60 * 1000); // 30 mins
 
 window.onerror = function(errorMessage, url, line, column, stackTrace){
 	var environmentDetails = navigator.userAgent;
-	
-	var message = stackTrace.message + "\n" + stackTrace.stack + "\n" + environmentDetails;
+	if(stackTrace){
+		var message = stackTrace.message + "\n" + stackTrace.stack + "\n" + environmentDetails;
+	} else {
+		// Firefox doesn't support stack traces yet
+		var message = errorMessage + "\n(Browser does not support stack traces)\n" + environmentDetails;
+	}
 	
 	api.emit("errorReporter", {trace: message});
 	return false;

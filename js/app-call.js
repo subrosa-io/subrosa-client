@@ -108,7 +108,11 @@ function startMediaTest(){
 			appcall.mediaTestMicrophone = appcall.mediaTestAudioContext.createMediaStreamSource(appcall.mediaStream);
 			appcall.mediaTestVolume = appcall.mediaTestAudioContext.createGain();
 			appcall.mediaTestMicrophone.connect(appcall.mediaTestVolume);
-			appcall.mediaTestNode = appcall.mediaTestAudioContext.createJavaScriptNode(2048, 1, 1);
+			if(appcall.mediaTestAudioContext.createScriptProcessor){
+				appcall.mediaTestNode = appcall.mediaTestAudioContext.createScriptProcessor(2048, 1, 1);
+			} else {
+				appcall.mediaTestNode = appcall.mediaTestAudioContext.createJavascriptNode(2048, 1, 1);
+			}
 			appcall.mediaTestVolume.connect(appcall.mediaTestNode);
 			appcall.mediaTestNode.connect(appcall.mediaTestAudioContext.destination);
 			var rollingActivity = [];
@@ -139,7 +143,8 @@ function startMediaTest(){
 			}
 		}
 	}, function(error){
-		alert("An error " + error + " has occured. Please make sure you have allowed permission.");
+		alert("An error " + error + " has occured. Please make sure you have allowed permission, and that no other programs are using the microphone/camera.");
+		console.log(error);
 	});
 	
 	setTimeout(function(){
