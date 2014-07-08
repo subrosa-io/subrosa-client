@@ -251,21 +251,42 @@ function layList(){
 		if($(".sidebarListItem[data-item='" + item.id + "']").length == 0){
 			var added = false;
 			var thisPinned = getProp(item.id + "-pinned");
+			var thisName = $(".sidebarListItem[data-item='" + item.id + "']").find(".listItemTitle").text();
+			
 			$(".sidebarListItem").each(function(){
 				var itemID = $(this).attr("data-item");
 				if(itemID == "me" || itemID == "searchElement" || itemID == "home" || itemID == "meta" || itemID == "gedit"){
 					
 				} else {
 					var lastCommunication = Math.max(appcore.list[appcore.listHash[itemID]].lastMessage, appcore.list[appcore.listHash[itemID]].lastMyMessage);
-					var objPinned = getProp(itemID + "-pinned");
-					if((Math.max(item.lastMessage, item.lastMyMessage) > lastCommunication && !objPinned) || (!objPinned && thisPinned)){
+					var objPinned = getProp(itemID + "-pinned"); // obj being list item being tested
+					var objName = $(this).find(".listItemTitle").text();
+					
+					if(thisPinned){
+						if(objPinned){
+							if(objName > thisName){ // compare alphabetically
+								added = true;
+							}								
+						} else {
+							added = true;
+						}
+					} else {
+						if(objPinned){
+							// don't add before a pinned item
+						} else {
+							if(Math.max(item.lastMessage, item.lastMyMessage) > lastCommunication){
+								added = true;
+							}
+						}
+					}
+					
+					if(added){
 						$(this).before(createItemHTML("conv", item));
-						added = true;
 						return false;
 					}
 				}
 			});
-			if(!added){
+			if(!added){ // add at the end
 				$(".sidebarListItem:last").after(createItemHTML("conv", item));
 			}
 			if(!convBodyHolders[item.id])

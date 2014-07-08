@@ -226,6 +226,15 @@ a:hover {
 	width: 1px; /* trick */
 	white-space: nowrap;
 }
+#mainScreen .listItemPinned {
+	position: absolute;
+	left: 49px;
+	margin-top: -4px;
+	transform: rotate(38deg);
+	-webkit-transform: rotate(38deg);
+	font-size: 90%;
+	color: #696969;
+}
 #mainScreen .listItemSubtitle {
 	margin-left: 5px;
 	color: #777;
