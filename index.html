@@ -390,8 +390,9 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 				<p>Set the rank for user <a class="userLink dottedLink" id="userRankUsername"></a> to <select id="userRankSelect"><option value="0">Normal user</option><option value="2">Moderator</option><option value="4">Admin</option><option value="9">Superadmin</option></select> <button id="userRankApply">Apply</button></p>
 				<p class="userRankDesc" data-rank="0" style="display: block">Normal users have no special privileges.</p>
 				<p class="userRankDesc" data-rank="2">Moderators can <strong>kick users</strong>.</p>
-				<p class="userRankDesc" data-rank="4">Admins can <strong>kick users</strong> and <strong>make users moderators.</strong></p>
-				<p class="userRankDesc" data-rank="9">Superadmins can <strong>kick users</strong> and <strong>make users</strong> up to <strong>superadmins</strong>.</p>
+				<p class="userRankDesc" data-rank="4">Admins can <strong>kick users</strong>, <strong>edit group info</strong>, and <strong>make users moderators.</strong></p>
+				<p class="userRankDesc" data-rank="9">Superadmins can <strong>kick users</strong>, <strong>edit group info</strong>, and <strong>make users</strong> up to <strong>superadmins</strong>.</p>
+				<p class="errorMessage"><span id="userRankNoPermU" style="display: none">You don't have permission to edit the rank of this user.</span> <span id="userRankNoPermR" style="display: none">You don't have permission to set the user to this rank.</span></p>
 			</div>
 			<div data-ref="noPermission">
 				<h2>No permission</h2>

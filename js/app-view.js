@@ -579,7 +579,7 @@ function mainAppHooks(){
 		$(this).popover($("#usersMorePopover"));
 		getCallUsers();
 	});
-	$("#convSubtitleUsersList,#usersMorePopoverContent,#convText,#kickerUsername,#userRankUsername").on('click', '.userLink', function(){
+	$("#convSubtitleUsersList,#usersMorePopoverContent,#convText,#modal").on('click', '.userLink', function(){
 		var convID = "conv" + sortUID(appcore.uid, $(this).attr("data-uid"));
 		if(appcore.listHash[convID]){
 			changeTabTo(convID);
@@ -601,15 +601,28 @@ function mainAppHooks(){
 	$("#usersMorePopover").on("click", ".userRankLink", function(){
 		$("#userRankUsername").text(getNameFromUID($(this).attr("data-uid")));
 		$("#userRankUsername").attr("data-uid", $(this).attr("data-uid"));
+		$("#userRankSelect").change(); // trigger update
 		$.modal("userRank", "show");
 	});
 	$("#userRankSelect").change(function(){
+		var myRank = appcore.list[appcore.listHash[currentTab]].myRank;
+		var userRank = appcore.list[appcore.listHash[currentTab]].ranks[$("#userRankUsername").attr("data-uid")] || 0;
+		var setRankTo = $("#userRankSelect").val();
+		
 		$(".userRankDesc").hide();
-		$(".userRankDesc[data-rank='" + $("#userRankSelect").val() + "']").show();
+		$(".userRankDesc[data-rank='" + setRankTo + "']").show();
+		$("#userRankNoPermU,#userRankNoPermR").hide();
+		$("#userRankApply").removeClass("disabled");
+		if(myRank <= setRankTo && myRank != 9){
+			$("#userRankNoPermR").show(); $("#userRankApply").addClass("disabled");
+		} else if(myRank <= userRank && myRank != 9){
+			$("#userRankNoPermU").show(); $("#userRankApply").addClass("disabled");
+		}
 	});
 	$("#userRankApply").click(function(){
 		$.modal("userRank", "hide");
-		api.emit("setUserRank", {target: currentTab, user: $("#userRankUsername").attr("data-uid"), newRank: $("#userRankSelect").val()});
+		if(!$(this).hasClass("disabled"))
+			api.emit("setUserRank", {target: currentTab, user: $("#userRankUsername").attr("data-uid"), newRank: $("#userRankSelect").val()});
 	});
 	api.on("userList", userList);
 	$("#voiceDrop").click(function(){
