@@ -910,6 +910,53 @@ p.userRankDesc {
 #quickstartSearchTip {
 	border-bottom: 1px dashed #F6A222;
 }
+#mediaTest {
+	margin-top: 10px;
+	border: 1px solid #B3B3B3;
+	padding: 8px;
+	border-radius: 3px;
+}
+#mediaTest .close:after {
+	margin-right: 0px;
+}
+#mediaTestHelpText {
+	width: 128px;
+	font-size: 80%;
+	display: inline-block;
+	margin: 0px;
+	vertical-align: top;
+}
+#mediaTestVideo {
+	width: 125px;
+	height: 94px;
+}
+#mediaTestAudio {
+	height: 94px;
+	display: inline-block;
+	vertical-align: top;
+	width: 80px;
+	padding: 0px 10px 0px 10px;
+}
+#mediaTestAudio i.fa {
+	font-size: 450%;
+	margin-top: 10px;
+	margin-left: 19px;
+}
+#mediaTestAudioBar {
+	width: 80px;
+	border: 1px solid #5F5F5F;
+	height: 10px;
+	border-radius: 5px;
+}
+#mediaTestAudioBar .filling {
+	background-color: #7427FC;
+	height: 10px;
+	border-radius: 3px;
+	width: 0px;
+	/*-webkit-transition: width 0.04s ease-in;
+    -moz-transition: width 0.04s ease-in;
+    transition: width 0.04s ease-in;*/
+}
 .homeUnit {
 	max-width: 550px;
 	min-width: 400px;

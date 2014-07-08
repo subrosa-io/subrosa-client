@@ -378,10 +378,10 @@ ul.tabMenu > li.active {
 	opacity: 0;
 	transition: opacity 0.2s ease-in;
 }
-.modalClose {
+.close {
 	cursor: pointer;
 }
-.modalClose:after {
+.close:after {
 	color: #8F8F8F;
 	content: "\00d7";
 	font-size: 16.5pt;

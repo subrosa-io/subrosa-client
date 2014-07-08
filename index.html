@@ -246,8 +246,14 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 						<div id="homeInfo" class="homeUnit">
 							Info
 							<hr />
-							<span id="infoSupportCalls" style="display: none">Your browser supports voice and video calls.</span>
+							<span id="infoSupportCalls" style="display: none">Your browser supports voice and video calls.<br /><a id="testUserMedia">Test my <i class="fa fa-microphone"></i> microphone and <i class="fa fa-video-camera"></i> camera</a></span>
 							<span id="infoNotSupportCalls" style="display:none">Your browser doesn't support voice and video calls. They are supported in Mozilla Firefox and Google Chrome.</span>
+							<div id="mediaTest" style="display: none">
+								<span class="close"></span>
+								<video id="mediaTestVideo"></video>
+								<div id="mediaTestAudio"><i class="fa fa-microphone"></i><div id="mediaTestAudioBar"><div class="filling"></div></div></div>
+								<p id="mediaTestHelpText">Use the browser interface to change the webcam or microphone device.</p>
+							</div>
 						</div>
 					</div>
 					<div class="contentTab tab-conv" style="display:none">
@@ -376,7 +382,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 				</div>
 			</div>
 		</div>
-		<div id="modal" class="modal"><span class="modalClose"></span>
+		<div id="modal" class="modal"><span id="modalClose" class="close"></span>
 			<div data-ref="kicked">
 				<h2>Kicked</h2>
 				<p><a class="userLink dottedLink" id="kickerUsername"></a> kicked you from the room <strong id="kickedFromName"></strong>. You can rejoin if someone invites you again.</p>

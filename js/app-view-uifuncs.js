@@ -103,7 +103,7 @@ function keepPosModals(){
 		activeModal.css({left: left+"px", top: top+"px"});
 	}
 }
-$("#overlay,.modalClose").click(function(){
+$("#overlay,#modalClose").click(function(){
 	(activeModal && $.modal('', 'hide'));
 });
 jQuery.fn.moveCaretToEnd = function(){

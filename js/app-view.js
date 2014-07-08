@@ -735,6 +735,18 @@ function mainAppHooks(){
 		api.emit("setProp", {name: currentTab + "-pinned", value: null});
 		layList();
 	});
+	$("#testUserMedia").click(function(){
+		if($("#mediaTest").is(":visible")){
+			stopMediaTest();
+			$("#mediaTest").slideUp();
+		} else {
+			startMediaTest();
+			$("#mediaTest").slideDown();
+		}
+	});
+	$("#mediaTest .close").click(function(){
+		$("#testUserMedia").click();
+	});
 }
 var lastTab = "";
 var currentTab = "";
