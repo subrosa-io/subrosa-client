@@ -512,7 +512,7 @@ function mainAppHooks(){
 		soundNewMessage.play();
 	});
 	$("#ringerVolumeSlider").change(function(){
-		api.emit("setProp", {name: "ringervolume", value: this.value/100});
+		api.emit("setProp", {name: "ringerVolume", value: this.value/100});
 		var soundRinging = $("#soundRinging")[0];
 		// If the ringer is already playing and looping, stop here; previewing it would mess it up.
 		if(!soundRinging.paused && soundRinging.loop) return;
@@ -965,9 +965,9 @@ function loggedInCalls(){
 	} else {
 		$("#infoNotSupportCalls").show();
 	}
-	if(getProp("generalVolume"))
+	if(getProp("generalVolume") !== false)
 		$("#generalVolumeSlider").val(getProp("generalVolume")*100);
-	if(getProp("ringingVolume"))
+	if(getProp("ringingVolume") !== false)
 		$("#ringingVolumeSlider").val(getProp("ringingVolume")*100);
 	if(getProp("disableNotifications"))
 		$("#enableNotificationsCheckbox").attr("checked", false);
@@ -1254,7 +1254,7 @@ api.on("callUpdate", function(data){
 		layContent(true, false);
 });
 function startRinging(){
-	$("#soundRinging")[0].volume = (getProp("generalVolume") ? getProp("generalVolume") : 0.7);
+	$("#soundRinging")[0].volume = (getProp("ringerVolume") !== false ? getProp("ringerVolume") : 0.7);
 	$("#soundRinging")[0].loop = true;
 	$("#soundRinging")[0].play();
 }
@@ -1298,6 +1298,7 @@ api.on("notify", function(data){
 		if(data.target.indexOf("-") != -1 || data.target==currentTab){
 			var icon = getUserItem(data.uid).avatar || "img/noavatar.png";
 			if(!hasFocus){
+				$("#soundNewMessage")[0].volume = (getProp("generalVolume") !== false ? getProp("generalVolume") : 0.7);
 				$("#soundNewMessage")[0].play();
 				newNotification(icon, escapeText(data.displayname), data.message, 0, false)
 			} else if(data.target != currentTab){

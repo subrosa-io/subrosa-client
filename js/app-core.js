@@ -1305,5 +1305,5 @@ function getProp(name){
 	if(!appcore.profileBlob.props)
 		return false;
 	
-	return appcore.profileBlob.props[name] || false;
+	return (typeof appcore.profileBlob.props[name] != 'undefined' ? appcore.profileBlob.props[name] : false);
 }
