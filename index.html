@@ -456,12 +456,20 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 				<p>Subrosa has detected possible interception of your call. This may mean a party with capability to modify your network requests is intercepting your call, or it may be bug in Subrosa creating a false positive. Try again in a while, prehaps on a different network.</p>
 			</div>
 			<div data-ref="callsNotSupported">
-				<h2>Calls not supported</h2>
 				<p>Your browser does not support voice or video calls. Please use Mozilla Firefox or Google Chrome.</p>
 			</div>
 			<div data-ref="systemTimeInaccurate">
-				<h2>System time inaccurate</h2>
 				<p>Your computer's time/date is significantly inaccurate. Subrosa requires your computer's time to be accurate.</p> <p><strong>Other users will not receive <i>any</i> of your messages.</strong> Please correct your system time.</p>
+			</div>
+			<div data-ref="errorReporter">
+				<div id="errorReporterAsk" style="display: none">
+					<p>Subrosa encountered an error. Subrosa developers can review and fix the issue if you send the error report. <small>(Please send it!)</small></p>
+					<pre id="errorReportTrace"></pre>
+					<button id="errorReporterReport" class="button-primary">Send this report</button> <button id="errorReporterIgnore">Don't send</button>
+				</div>
+				<div id="errorReporterThanks" style="display: none">
+					<p>Report sent. <strong>Thank you!</strong> If anything is broken, try refreshing.</p>
+				</div>
 			</div>
 		</div>
 	</div>

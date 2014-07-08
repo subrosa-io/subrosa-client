@@ -953,9 +953,11 @@ p.userRankDesc {
 	height: 10px;
 	border-radius: 3px;
 	width: 0px;
-	/*-webkit-transition: width 0.04s ease-in;
-    -moz-transition: width 0.04s ease-in;
-    transition: width 0.04s ease-in;*/
+}
+#errorReportTrace {
+	font-size: 80%;
+	max-height: 80px;
+	overflow: auto;
 }
 .homeUnit {
 	max-width: 550px;

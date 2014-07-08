@@ -747,6 +747,14 @@ function mainAppHooks(){
 	$("#mediaTest .close").click(function(){
 		$("#testUserMedia").click();
 	});
+	$("#errorReporterReport").click(function(){
+		api.emit("sendErrorReport", {trace: $("#errorReportTrace").text()});
+		$("#errorReporterAsk").hide();
+		$("#errorReporterThanks").show();
+	});
+	$("#errorReporterIgnore").click(function(){
+		$.modal("errorReporter", "close");
+	});
 }
 var lastTab = "";
 var currentTab = "";
@@ -1276,6 +1284,12 @@ api.on("connectionState", function(data){
 	} else {
 		$("#disconnectedOverlay").show();
 	}
+});
+api.on("errorReporter", function(data){
+	$("#errorReportTrace").text(data.trace);
+	$("#errorReporterAsk").show();
+	$("#errorReporterThanks").hide();
+	$.modal("errorReporter", "show");
 });
 api.on("notify", function(data){
 	if(data.type == "statusChanged"){

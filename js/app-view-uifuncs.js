@@ -121,7 +121,7 @@ jQuery.fn.draggable = function(){
 	var dragging = false;
 	var lastPos = [0,0];
 	$(this).mousedown(function(event){
-		if(event.target.tagName == "SELECT")
+		if(event.target.tagName == "SELECT" || event.target.tagName == "P" || event.target.tagName == "SPAN")
 			return;
 		if(event.which===1){
 			dragging = true;
@@ -150,9 +150,9 @@ jQuery.modal = function(ref, state){
 		activeModal = $(thisModal);
 		thisModal.find("div[data-ref]").hide();
 		thisModal.find("div[data-ref='" + ref + "']").show();
-		keepPosModals();
 		$(thisModal).fadeIn(425);
 		$("#overlay").css({"opacity": 0.5, "z-index": 10000});
+		keepPosModals();
 	} else if($(thisModal).is(":visible") && (!state || state == 'hide')){
 		$(thisModal).fadeOut(425, function(){
 			$("#overlay").css("z-index", -100);

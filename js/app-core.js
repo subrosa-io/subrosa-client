@@ -447,203 +447,203 @@ function commHandler(comm, target, isFromBuffer){
 	if(!comm.time){
 		comm.time = new Date().getTime();
 	}
+	if(!comm.type)
+		return;
 	if(getProp(comm.sender + "-blocked")){
 		return;
 	}
-	if(comm.type){
-		if(target.length == 37 && !appcore.list[appcore.listHash[target]]){
-			if(!appcore.noListBuffer[target])
-				appcore.noListBuffer[target] = [];
-			appcore.noListBuffer[target].push(comm);
+	if(target.length == 37 && !appcore.list[appcore.listHash[target]]){
+		if(!appcore.noListBuffer[target])
+			appcore.noListBuffer[target] = [];
+		appcore.noListBuffer[target].push(comm);
+		return;
+	}
+	var listItem = (appcore.list[appcore.listHash[target]] ? appcore.list[appcore.listHash[target]] : false);
+	if(comm.type == 1){
+		if(isFromBuffer && appcore.bufferTimestampIgnore.indexOf(comm.time + target) != -1)
 			return;
+		if(comm.sender != appcore.uid){ // Don't keyExchange if it's my keyExchange
+			if(!appcore.profileBlob.conversations[target]){ // Don't keyExchange if already done so
+				decryptAndVerifyRSA(comm.data, comm.auxdata, comm.pubKey);
+			}
 		}
-		var listItem = (appcore.list[appcore.listHash[target]] ? appcore.list[appcore.listHash[target]] : false);
-		if(comm.type == 1){
+		if(comm.pubKey){
+			listItem.pubKey = comm.pubKey; // In all cases comm.pubKey is pubkey of other party.
+		}
+		api.emit("newText", {user: "*", userShow: "*", message: "<span class='fa fa-lock'></span> Encryption initialized. <a href='javascript:;' class='verifyKey'>Verify</a>", isMe: false, target: target, unread: false, isFromBuffer: isFromBuffer, small: true});
+		appcore.sockemit("clearHistory", {target: target, time: comm.time});
+		if(!isFromBuffer && !listItem.hasBundle){
+			appcore.bufferTimestampIgnore.push(comm.time + target);
+		}
+	} else {
+		var obj = decryptComm(comm, target);
+		if(obj.failedDecrypt){
+			comm.type = 2;
+		}
+		if(obj){
+			
 			if(isFromBuffer && appcore.bufferTimestampIgnore.indexOf(comm.time + target) != -1)
 				return;
-			if(comm.sender != appcore.uid){ // Don't keyExchange if it's my keyExchange
-				if(!appcore.profileBlob.conversations[target]){ // Don't keyExchange if already done so
-					decryptAndVerifyRSA(comm.data, comm.auxdata, comm.pubKey);
+			
+			var userInfo = getUserItem(comm.sender);
+			if(!userInfo){
+				if(!comm.username){
+					alert("DEBUG: No userInfo & no comm.username");
+				} else {
+					appcore.userList[comm.sender] = {username: comm.username};
+					appcore.bgColorCache[comm.sender] = comm.bgColor;
+					userInfo = appcore.userList[comm.sender];
+					api.emit("notify", {type: "userIdentified", target: target});
 				}
 			}
-			if(comm.pubKey){
-				listItem.pubKey = comm.pubKey; // In all cases comm.pubKey is pubkey of other party.
-			}
-			api.emit("newText", {user: "*", userShow: "*", message: "<span class='fa fa-lock'></span> Encryption initialized. <a href='javascript:;' class='verifyKey'>Verify</a>", isMe: false, target: target, unread: false, isFromBuffer: isFromBuffer, small: true});
-			appcore.sockemit("clearHistory", {target: target, time: comm.time});
-			if(!isFromBuffer && !listItem.hasBundle){
-				appcore.bufferTimestampIgnore.push(comm.time + target);
-			}
-		} else {
-			var obj = decryptComm(comm, target);
-			if(obj.failedDecrypt){
-				comm.type = 2;
-			}
-			if(obj){
-				
-				if(isFromBuffer && appcore.bufferTimestampIgnore.indexOf(comm.time + target) != -1)
+			var isMe = comm.sender == appcore.uid;
+			
+			var userDisplay = escapeText((userInfo.displayname ? userInfo.displayname : userInfo.username));
+			var unread = listItem.lastRead < comm.time;
+			var theMessage = "";
+			
+			if(comm.type == 2){
+				theMessage = parseChatMessage(escapeText(obj.msg), userDisplay);
+				if(listItem.typings){
+					for(var i in listItem.typings){
+						if(listItem.typings[i][0] == comm.sender){
+							listItem.typings.splice(i, 1);
+							api.emit("refreshTypingDisplay", {});
+							break;
+						}
+					}
+				}
+				if(obj.replaceTimestamp){
+					appcore.bufferTimestampReplace[obj.replaceTimestamp] = {target: target, newMessage: theMessage, replaceTimestamp: obj.replaceTimestamp, user: comm.sender, replacedTime: comm.time}
+					api.emit("replaceText", appcore.bufferTimestampReplace[obj.replaceTimestamp]);
 					return;
-				
-				var userInfo = getUserItem(comm.sender);
-				if(!userInfo){
-					if(!comm.username){
-						alert("DEBUG: No userInfo & no comm.username");
+				}
+			} else if(comm.type == 5){
+				if(obj.accepted){
+					theMessage = "<b>" + userDisplay + " accepted the contact request</b>";
+				} else {
+					if(isMe){
+						theMessage = "<b>You sent a contact request</b>: \"" + escapeText(obj.msg) + "\"";
 					} else {
-						appcore.userList[comm.sender] = {username: comm.username};
-						appcore.bgColorCache[comm.sender] = comm.bgColor;
-						userInfo = appcore.userList[comm.sender];
-						api.emit("notify", {type: "userIdentified", target: target});
+						theMessage = "<b>" + userDisplay + " sent you a contact request</b>: \"" + escapeText(obj.msg) + "\"";
 					}
 				}
-				var isMe = comm.sender == appcore.uid;
-				
-				var userDisplay = escapeText((userInfo.displayname ? userInfo.displayname : userInfo.username));
-				var unread = listItem.lastRead < comm.time;
-				var theMessage = "";
-				
-				if(comm.type == 2){
-					theMessage = parseChatMessage(escapeText(obj.msg), userDisplay);
-					if(listItem.typings){
-						for(var i in listItem.typings){
-							if(listItem.typings[i][0] == comm.sender){
-								listItem.typings.splice(i, 1);
-								api.emit("refreshTypingDisplay", {});
-								break;
-							}
-						}
-					}
-					if(obj.replaceTimestamp){
-						appcore.bufferTimestampReplace[obj.replaceTimestamp] = {target: target, newMessage: theMessage, replaceTimestamp: obj.replaceTimestamp, user: comm.sender, replacedTime: comm.time}
-						api.emit("replaceText", appcore.bufferTimestampReplace[obj.replaceTimestamp]);
-						return;
-					}
-				} else if(comm.type == 5){
-					if(obj.accepted){
-						theMessage = "<b>" + userDisplay + " accepted the contact request</b>";
-					} else {
-						if(isMe){
-							theMessage = "<b>You sent a contact request</b>: \"" + escapeText(obj.msg) + "\"";
-						} else {
-							theMessage = "<b>" + userDisplay + " sent you a contact request</b>: \"" + escapeText(obj.msg) + "\"";
-						}
-					}
-				} else if(comm.type == 6){
-					if(listItem.contact == 2 || listItem.id.length == 20){
-						if(obj.type == "voice" || obj.type == "video"){
-							if(listItem.active && listItem.active != -1) // target is already in call
-								return;
-							listItem.active = {type: obj.type, state: "CALLING", myInitiate: false};
-							if(listItem.id.length == 37){
-								callTimeout = setTimeout(function(){
-									if(listItem.active.state == "CALLING"){
-										var oldType = listItem.active.type;
-										listItem.active = -1;
-										api.emit("callUpdate", {state: "", oldState: "CALLING", target: target, callType: oldType});
-									}
-								}, 30 * 1000);
-							} else {
-								listItem.active.callUsers = [comm.sender];
-							}
-							api.emit("callUpdate", {state: "CALLING", oldState: "", target: target, callType: listItem.active.type});
-						} else if(obj.type == "acceptCall"){
-							if(target.length == 37){
-								acceptCall(listItem.id, false);
-							} else {
-								if(listItem.active){
-									listItem.active.callUsers.push(comm.sender);
-									api.emit("notify", {type: "callUserUpdate", event: "JOIN", target: listItem.id, uid: comm.sender, callType: listItem.active.type});
+			} else if(comm.type == 6){
+				if(listItem.contact == 2 || listItem.id.length == 20){
+					if(obj.type == "voice" || obj.type == "video"){
+						if(listItem.active && listItem.active != -1) // target is already in call
+							return;
+						listItem.active = {type: obj.type, state: "CALLING", myInitiate: false};
+						if(listItem.id.length == 37){
+							callTimeout = setTimeout(function(){
+								if(listItem.active.state == "CALLING"){
+									var oldType = listItem.active.type;
+									listItem.active = -1;
+									api.emit("callUpdate", {state: "", oldState: "CALLING", target: target, callType: oldType});
 								}
-							}
-						} else { // dropCall
-							if(target.length==37){
-								clearTimeout(callTimeout);
-								var oldState = listItem.active.state;
-								var oldType = listItem.active.type;
-								listItem.active = {};
-								appcore.activeCall = "";
-								api.emit("callUpdate", {state: "", oldState: oldState, target: target, callType: oldType});
-							} else {
-								handleRoomCallQuit(target, comm.sender);
+							}, 30 * 1000);
+						} else {
+							listItem.active.callUsers = [comm.sender];
+						}
+						api.emit("callUpdate", {state: "CALLING", oldState: "", target: target, callType: listItem.active.type});
+					} else if(obj.type == "acceptCall"){
+						if(target.length == 37){
+							acceptCall(listItem.id, false);
+						} else {
+							if(listItem.active){
+								listItem.active.callUsers.push(comm.sender);
+								api.emit("notify", {type: "callUserUpdate", event: "JOIN", target: listItem.id, uid: comm.sender, callType: listItem.active.type});
 							}
 						}
-					}
-				} else if(comm.type == 7){
-					if(isMe){
-						theMessage = '<b>You invited them to <a href="javascript:;" class="roomInviteLink dottedLink" data-target="' + escapeText(obj.target) + '" data-convKey="' + btoa(obj.convKey) + '">' + escapeText(obj.name) + '</a> (group chat)</b>';
-					} else {
-						theMessage = "<b>" + userDisplay + ' invited you to <a href="javascript:;" class="roomInviteLink dottedLink" data-target="' + escapeText(obj.target) + '" data-convKey="' + btoa(obj.convKey) + '">' + escapeText(obj.name) + '</a> (group chat)</b>';
-					}
-				} else if(comm.type == 8){
-					if(isMe){
-						theMessage = '<b>You invited <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.uid) + '">' + escapeText(obj.username) + '</a> to this room.</b>';                    
-					} else {
-						theMessage = '<b>' + userDisplay + ' invited <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.uid) + '">' + escapeText(obj.username) + '</a> to this room.</b>';
-					}
-				} else if(comm.type == 9){
-					if(isMe){
-						if(obj.quit){
-							theMessage = "<b>You left the room.</b>";
+					} else { // dropCall
+						if(target.length==37){
+							clearTimeout(callTimeout);
+							var oldState = listItem.active.state;
+							var oldType = listItem.active.type;
+							listItem.active = {};
+							appcore.activeCall = "";
+							api.emit("callUpdate", {state: "", oldState: oldState, target: target, callType: oldType});
 						} else {
-							theMessage = "<b>You joined the room.</b>";
+							handleRoomCallQuit(target, comm.sender);
 						}
+					}
+				}
+			} else if(comm.type == 7){
+				if(isMe){
+					theMessage = '<b>You invited them to <a href="javascript:;" class="roomInviteLink dottedLink" data-target="' + escapeText(obj.target) + '" data-convKey="' + btoa(obj.convKey) + '">' + escapeText(obj.name) + '</a> (group chat)</b>';
+				} else {
+					theMessage = "<b>" + userDisplay + ' invited you to <a href="javascript:;" class="roomInviteLink dottedLink" data-target="' + escapeText(obj.target) + '" data-convKey="' + btoa(obj.convKey) + '">' + escapeText(obj.name) + '</a> (group chat)</b>';
+				}
+			} else if(comm.type == 8){
+				if(isMe){
+					theMessage = '<b>You invited <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.uid) + '">' + escapeText(obj.username) + '</a> to this room.</b>';                    
+				} else {
+					theMessage = '<b>' + userDisplay + ' invited <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.uid) + '">' + escapeText(obj.username) + '</a> to this room.</b>';
+				}
+			} else if(comm.type == 9){
+				if(isMe){
+					if(obj.quit){
+						theMessage = "<b>You left the room.</b>";
 					} else {
-						if(obj.quit){
-							if(obj.kickedByUID){
-								theMessage = "<b>" + userDisplay + ' was kicked from the room by <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.kickedByUID) + '">' + escapeText(obj.kickedByUsername) + '</a></b>';
-							} else {
-								theMessage = "<b>" + userDisplay + " left the room.</b>";
-							}
-							if(listItem.active && listItem.active.callUsers && listItem.active.callUsers.indexOf(comm.sender) !== -1){
-								handleRoomCallQuit(target, comm.sender);
-							}
-							if(listItem.users.indexOf(comm.sender) != -1){
-								listItem.users.splice(listItem.users.indexOf(comm.sender), 1);
-								if(!isFromBuffer){
-									listItem.usercount--;
-								}
-								api.emit("notify", {type: "userIdentified", target: listItem.id});
-							}
+						theMessage = "<b>You joined the room.</b>";
+					}
+				} else {
+					if(obj.quit){
+						if(obj.kickedByUID){
+							theMessage = "<b>" + userDisplay + ' was kicked from the room by <a href="javascript:;" class="userLink dottedLink" data-uid="' + escapeText(obj.kickedByUID) + '">' + escapeText(obj.kickedByUsername) + '</a></b>';
 						} else {
-							theMessage = "<b>" + userDisplay + " joined the room.</b>";
+							theMessage = "<b>" + userDisplay + " left the room.</b>";
+						}
+						if(listItem.active && listItem.active.callUsers && listItem.active.callUsers.indexOf(comm.sender) !== -1){
+							handleRoomCallQuit(target, comm.sender);
+						}
+						if(listItem.users.indexOf(comm.sender) != -1){
+							listItem.users.splice(listItem.users.indexOf(comm.sender), 1);
 							if(!isFromBuffer){
-								listItem.usercount++;
+								listItem.usercount--;
 							}
+							api.emit("notify", {type: "userIdentified", target: listItem.id});
+						}
+					} else {
+						theMessage = "<b>" + userDisplay + " joined the room.</b>";
+						if(!isFromBuffer){
+							listItem.usercount++;
 						}
 					}
-				} else if(comm.type == 10){
-					try {
-						rtcProcessSignal(obj.o, obj.to, comm.sender);
-					} catch (error){
-						console.log(error);
-					}
-				} else if(comm.type == 11){
-					var ranks = ['normal user', '', 'moderator', '', 'admin', '', '', '', '', 'superadmin'];
-					theMessage = '<b>' + (isMe ? 'You' : userDisplay) + ' set the rank of <a href="javascript:;" class="userLink dottedLnk" data-uid="' + escapeText(obj.targetUserUID) + '">' + escapeText(obj.targetUserUsername) + '</a> to <i>' + ranks[obj.newRank] + '</i>.</b>';
-					if(!isFromBuffer){
-						listItem.ranks[obj.targetUserUID] = obj.newRank;
-						if(obj.targetUserUID == appcore.uid)
-							listItem.myRank = obj.newRank;
-							
-						api.emit("notify", {type: "userRankChanged", target: target, uid: obj.targetUserUID, newRank: obj.newRank});
-					}
 				}
-				if(comm.type == 5 || comm.type == 2 || (comm.type >= 7 && comm.type <= 9) || comm.type == 11){
-					if(!isFromBuffer && !listItem.hasBundle){
-						appcore.bufferTimestampIgnore.push(comm.time + target);
-					}
-					listItem.canMarkRead = true;
-					api.emit("newText", {user: comm.sender, userShow: (comm.type == 2 ? userDisplay : "*"), message: theMessage, isMe: isMe, timestamp: comm.time, target: target, unread: unread, isFromBuffer: isFromBuffer, bgColor: (appcore.bgColorCache[comm.sender] ? appcore.bgColorCache[comm.sender] : '')});
-					
-					if(comm.type == 2 && appcore.bufferTimestampReplace[comm.time] && appcore.bufferTimestampReplace[comm.time].target == target){
-						api.emit("replaceText", appcore.bufferTimestampReplace[comm.time]); // sanity checks performed by app-view.js
-						// Treat instaces where the original message wasn't loaded when the edit message came the same as if the original message was loaded - by sending a replaceText after the original message is loaded.
-						delete appcore.bufferTimestampReplace[comm.time];
-					}
-					
-					if(listItem.users && listItem.users.indexOf(comm.sender) == -1 && (comm.type != 9 || !obj.quit)){
-						listItem.users.push(comm.sender);
-						api.emit("notify", {type: "userIdentified", target: listItem.id});
-					}
+			} else if(comm.type == 10){
+				try {
+					rtcProcessSignal(obj.o, obj.to, comm.sender);
+				} catch (error){
+					console.log(error);
+				}
+			} else if(comm.type == 11){
+				var ranks = ['normal user', '', 'moderator', '', 'admin', '', '', '', '', 'superadmin'];
+				theMessage = '<b>' + (isMe ? 'You' : userDisplay) + ' set the rank of <a href="javascript:;" class="userLink dottedLnk" data-uid="' + escapeText(obj.targetUserUID) + '">' + escapeText(obj.targetUserUsername) + '</a> to <i>' + ranks[obj.newRank] + '</i>.</b>';
+				if(!isFromBuffer){
+					listItem.ranks[obj.targetUserUID] = obj.newRank;
+					if(obj.targetUserUID == appcore.uid)
+						listItem.myRank = obj.newRank;
+						
+					api.emit("notify", {type: "userRankChanged", target: target, uid: obj.targetUserUID, newRank: obj.newRank});
+				}
+			}
+			if(comm.type == 5 || comm.type == 2 || (comm.type >= 7 && comm.type <= 9) || comm.type == 11){
+				if(!isFromBuffer && !listItem.hasBundle){
+					appcore.bufferTimestampIgnore.push(comm.time + target);
+				}
+				listItem.canMarkRead = true;
+				api.emit("newText", {user: comm.sender, userShow: (comm.type == 2 ? userDisplay : "*"), message: theMessage, isMe: isMe, timestamp: comm.time, target: target, unread: unread, isFromBuffer: isFromBuffer, bgColor: (appcore.bgColorCache[comm.sender] ? appcore.bgColorCache[comm.sender] : '')});
+				
+				if(comm.type == 2 && appcore.bufferTimestampReplace[comm.time] && appcore.bufferTimestampReplace[comm.time].target == target){
+					api.emit("replaceText", appcore.bufferTimestampReplace[comm.time]); // sanity checks performed by app-view.js
+					// Treat instaces where the original message wasn't loaded when the edit message came the same as if the original message was loaded - by sending a replaceText after the original message is loaded.
+					delete appcore.bufferTimestampReplace[comm.time];
+				}
+				
+				if(listItem.users && listItem.users.indexOf(comm.sender) == -1 && (comm.type != 9 || !obj.quit)){
+					listItem.users.push(comm.sender);
+					api.emit("notify", {type: "userIdentified", target: listItem.id});
 				}
 			}
 		}
@@ -1237,6 +1237,18 @@ appcore.sockon("version", function(data){
 var updateCheckerInterval = setInterval(function(){
 	appcore.sockemit("version", {});
 }, 4 * 60 * 1000);
+
+window.onerror = function(errorMessage, url, line, column, stackTrace){
+	var environmentDetails = navigator.userAgent;
+	
+	var message = stackTrace.message + "\n" + stackTrace.stack + "\n" + environmentDetails;
+	
+	api.emit("errorReporter", {trace: message});
+	return false;
+}
+api.on("sendErrorReport", function(data){
+	appcore.sockemit("errorReport", {trace: data.trace});
+});
 
 function sortUID(a, b){
 	var r = [a, b].sort();
