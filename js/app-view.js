@@ -30,7 +30,7 @@ function startScreen(){
 			createAccountScreen();
 	});
 	
-	if($("#loginUsername").val().length == 0 && localStorage.getItem("lastUsername")){
+	if($("#loginUsername").val().length == 0 && localStorage && localStorage.getItem("lastUsername")){
 		$("#loginUsername").val(localStorage.getItem("lastUsername"));
 	}
 	$("#header").children().hide();
@@ -765,7 +765,7 @@ function mainApp(){
 		
 		$(".loginPassword").val("");
 		// remember username
-		localStorage.setItem("lastUsername", $("#loginUsername").val());
+		localStorage && localStorage.setItem("lastUsername", $("#loginUsername").val());
 		
 		$("#startScreen").css("position", "absolute").fadeOut(300);
 		
@@ -808,7 +808,7 @@ function changeTabTo(tab){
 		refreshTypingDisplay();
 		if(listItem.relatedNotifications && listItem.relatedNotifications.length){
 			for(var i in listItem.relatedNotifications){
-				listItem.relatedNotifications[i].close();
+				listItem.relatedNotifications[i] && listItem.relatedNotifications[i].close();
 			}
 			listItem.relatedNotifications = [];
 		}
