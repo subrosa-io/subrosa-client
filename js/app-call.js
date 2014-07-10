@@ -76,7 +76,9 @@ function setMicrophoneMute(muted){
 function setVideoMute(muted){
 	appcall.videoMute = muted;
 	if(appcall.mediaStream){
-		appcall.mediaStream.getVideoTracks()[0].enabled = !muted;
+		if(appcall.mediaStream.getVideoTracks().length >= 1){
+			appcall.mediaStream.getVideoTracks()[0].enabled = !muted;
+		}
 	}
 	rtcSetVideoMute(muted);
 }
