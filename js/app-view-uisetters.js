@@ -542,9 +542,9 @@ function refreshTypingDisplay(){
 				}
 			}
 			if(typingArray.length == 1){
-				typingText += typingArray[0] + " is typing.. ";
+				typingText += typingArray[0] + " is typing...";
 			} else if(typingArray.length > 1){
-				typingText += typingArray.join(", ") + " is typing.. ";
+				typingText += typingArray.join(", ") + " is typing...";
 			}
 			if(typedArray.length == 1){
 				typingText += typedArray[0] + " has typed.";
