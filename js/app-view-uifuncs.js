@@ -176,7 +176,9 @@ return this;
 var baseFaviconImage = new Image();
 baseFaviconImage.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB5UlEQVQ4jY2SvWuTURTGf+ckqdUEk1pbKGp50W4W2sYEQQeD4tA6GP+DdKkZBZ0duoqQMRbBzO0SwdEhnRSsSQqKIn68dFEsocSPRmNzr0PyviZpSz3wwP3gOc+5z3OFvprOv7iuSFrA6T634BpssZpNPu4+F28xky9PKSaHkOpv2lOWkkFvVbLxdb/BuQdrUWupirRVr5w8jHM0iBMJYKzlVa3JZqNF6XOz3cPiijD98maiHuz0LYjghEPK3fPHmRwewBjjY/JYCGMMydEm99Z/0BEqADdkZql8Sa0pAdxJjnB1PNxD7sfyhwYrHxsAGNGUijEZgIsnwsyejqKq+0JEuDZ+iJFBbRtoTEYR0gCzZ2IHklWVyECAs0NBL4J0UCAGEB+LoOqH0mu8taiqvx89EvAijHkmEh1sG9VP9JS7S+SfkFqLC/B+6/eeI+8F93vLj1NFqAIsv6n9F3m7BZ++7XQmoapGNOf9qIPIqsrD13W+NlpejDmtLMRX5yaGi7cvnEJEdj3FV96xLD7f5OnGtvf8YmUhvhoEWLzsuBv1X+79Z1+cJ+9qjEVCzE0MYa31sfJ2i59/OiZbSggZb3K/4vm1R9K52K+spVDOJub9FLovy9nEfMvaNFDczaRkRFPdZIC/EibJIIaTP3UAAAAASUVORK5CYII=";
 
-setFaviconBadge(0); // reset favicon on page load
+setTimeout(function(){
+	setFaviconBadge(0); // reset favicon on page load
+}, 1); // Firefox workaround
 
 function canvasLoadImage(context, src){
 	var imageObj = new Image();
