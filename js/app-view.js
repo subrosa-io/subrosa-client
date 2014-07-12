@@ -840,7 +840,7 @@ function newText(data){
 	var convMessageUser = data.user;
 	var convMessageUserShow = data.userShow;
 	var isChatMessage = !(data.userShow == "*"); // messages with * userShow are not chat (type 2) messages
-	var convMessageContent = data.message;
+	var convMessageContent = (window.SubrosaEmoticons && window.SubrosaEmoticons.markUp && window.SubrosaEmoticons.markUp(data.message)) || data.message;
 	var convMessageMeta = (data.timestamp ? "<span title='" + fullTime(data.timestamp) + "'>" + friendlyTime(data.timestamp) + "</span>" : "");
 	var convMessageActions = (data.isMe && data.userShow != "*" ? "<div class='messageEditButton tinyButton'>Edit</div> <div class='messageEditCancelButton tinyButton' style='display: none'>Cancel</div>" : "");
 	var newDivider = true;
