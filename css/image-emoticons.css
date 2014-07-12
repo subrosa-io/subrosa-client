@@ -4,8 +4,8 @@
 .subrosa-image-emoticon[title=":-]"],
 .subrosa-image-emoticon[title=":D"],
 .subrosa-image-emoticon[title=":-D"] {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   display: inline-block;
   background: url(../img/emoticons/SMILING_FACE_WITH_OPEN_MOUTH.png);
 }
