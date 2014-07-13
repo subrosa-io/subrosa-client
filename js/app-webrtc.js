@@ -159,7 +159,7 @@ function createPeerConnection(uid) {
 	pc.uid = uid;
 	pc.onicecandidate = function(event){
 		if(event.candidate){
-			rtcSendSignal({type: 'candidate', label: event.candidate.sdpMLineIndex, id: event.candidate.sdpMid, candidate: event.candidate.candidate}, pc.uid)
+			rtcSendSignal({type: "candidate", candidate: event.candidate}, pc.uid)
 		}
 	}
 	pc.onaddstream = handleRemoteStreamAdded;
@@ -181,7 +181,7 @@ function createPeerConnection(uid) {
 function rtcCall(pc){
 	pc.createOffer(function(sessionDescription){
 		pc.setLocalDescription(sessionDescription);
-		rtcSendSignal(sessionDescription, pc.uid)
+		rtcSendSignal({type: "offer", sessionDescription: sessionDescription}, pc.uid);
 	}, function(error){
 		alert(error);
 	});
@@ -221,10 +221,16 @@ function gotReceiveChannel(){
 	console.log("gotReceiveChannel");
 }
 function rtcProcessSignal(object, to, sender){
+	console.log("Got " + object.type);
 	if(object.type == "candidate"){
-		var candidate = new RTCIceCandidate({sdpMLineIndex:object.label,
-		candidate:object.candidate});
-		apprtc.pc[sender].addIceCandidate(candidate);
+		setTimeout(function(){
+			try {
+				apprtc.pc[sender].addIceCandidate(new RTCIceCandidate(object.candidate));
+				console.log("successfully added candidate?");
+			} catch (error) {
+				console.log("Error adding candidate " + object.candidate.length, error);
+			}
+		}, 500);
 	} else if(object.type == "ready"){
 		if(apprtc.playerCount>0 || (!apprtc.callVideo && apprtc.mediaStream)){ // I am ready
 			if(!apprtc.pc[sender].playerID){
@@ -238,21 +244,22 @@ function rtcProcessSignal(object, to, sender){
 		}
 	} else if(object.type == "offer" && to == appcore.uid){
 		if(apprtc.pc[sender]){
-			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object));
+			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object.sessionDescription));
 			apprtc.pc[sender].createAnswer(function(sessionDescription){
 				apprtc.pc[sender].setLocalDescription(sessionDescription);
-				rtcSendSignal(sessionDescription, sender)
+				rtcSendSignal({type: "answer", sessionDescription: sessionDescription}, sender)
 			}, function(){}, apprtc.sdpVideoConstraints);
 		}
 	} else if(object.type == "answer" && to == appcore.uid){
 		if(apprtc.pc[sender]){
-			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object));
+			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object.sessionDescription));
 		}
 	} else {
 		console.log("Discarding RTC signal", object, to, sender);
 	}
 }
 function rtcSendSignal(object, to){
+	console.log("Sent " + object.type);
 	api.emit("sendComm", {target: appcore.activeCall, type: 10, message: {o: object, to: to}});
 }
 function verifyFingerprint(uid, remoteSdp, localSdp){

@@ -28,7 +28,8 @@ function startCallInput(group, type){
 		}
 		
 	}, function(error){
-		alert("An error " + error + " has occured. Please make sure you have allowed permission.");
+		alert("An error has occured. Please make sure you have allowed permission, and that no other programs are using the microphone/camera. See the console for more information.");
+		console.log(error);
 	});
 	
 	setTimeout(function(){
@@ -145,7 +146,7 @@ function startMediaTest(){
 			}
 		}
 	}, function(error){
-		alert("An error " + error + " has occured. Please make sure you have allowed permission, and that no other programs are using the microphone/camera.");
+		alert("An error has occured. Please make sure you have allowed permission, and that no other programs are using the microphone/camera. See the console for more information.");
 		console.log(error);
 	});
 	

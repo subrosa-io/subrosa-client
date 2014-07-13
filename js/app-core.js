@@ -560,7 +560,7 @@ function commHandler(comm, target, isFromBuffer){
 							clearTimeout(callTimeout);
 							var oldState = listItem.active.state;
 							var oldType = listItem.active.type;
-							listItem.active = {};
+							listItem.active = -1;
 							appcore.activeCall = "";
 							api.emit("callUpdate", {state: "", oldState: oldState, target: target, callType: oldType});
 						} else {

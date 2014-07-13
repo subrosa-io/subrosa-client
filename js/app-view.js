@@ -753,7 +753,7 @@ function mainAppHooks(){
 		$("#errorReporterThanks").show();
 	});
 	$("#errorReporterIgnore").click(function(){
-		$.modal("errorReporter", "close");
+		$.modal("errorReporter", "hide");
 	});
 }
 var lastTab = "";
