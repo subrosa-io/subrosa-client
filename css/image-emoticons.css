@@ -1,11 +1,42 @@
 .subrosa-image-emoticon[title=":)"],
 .subrosa-image-emoticon[title=":-)"],
 .subrosa-image-emoticon[title=":]"],
-.subrosa-image-emoticon[title=":-]"],
+.subrosa-image-emoticon[title=":-]"] {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  background: url(../img/emoticons/SMILING_FACE.png);
+}
+
+.subrosa-image-emoticon[title=":("],
+.subrosa-image-emoticon[title=":-("],
+.subrosa-image-emoticon[title=":["],
+.subrosa-image-emoticon[title=":-["] {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  background: url(../img/emoticons/FROWNING_FACE.png);
+}
+
 .subrosa-image-emoticon[title=":D"],
 .subrosa-image-emoticon[title=":-D"] {
   width: 14px;
   height: 14px;
   display: inline-block;
   background: url(../img/emoticons/SMILING_FACE_WITH_OPEN_MOUTH.png);
+}
+
+.subrosa-image-emoticon[title=":O"],
+.subrosa-image-emoticon[title=":-O"] {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  background: url(../img/emoticons/FACE_WITH_OPEN_MOUTH.png);
+}
+
+.subrosa-image-emoticon[title=">_<"] {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  background: url(../img/emoticons/PERSEVERING_FACE.png);
 }
