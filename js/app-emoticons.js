@@ -27,6 +27,6 @@
         src = src.substring(loc+which.length);
       }
     } while(which);
-    return msg;
+    return msg + src;
   };
 }).call(window.SubrosaEmoticons = {});
