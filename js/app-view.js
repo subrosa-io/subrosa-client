@@ -840,7 +840,7 @@ function newText(data){
 	var convMessageUser = data.user;
 	var convMessageUserShow = data.userShow;
 	var isChatMessage = !(data.userShow == "*"); // messages with * userShow are not chat (type 2) messages
-	var convMessageContent = (window.SubrosaEmoticons && window.SubrosaEmoticons.markUp && window.SubrosaEmoticons.markUp(data.message)) || data.message;
+	var convMessageContent = parseChatMessage(data.message, data.userShow);
 	var convMessageMeta = (data.timestamp ? "<span title='" + fullTime(data.timestamp) + "'>" + friendlyTime(data.timestamp) + "</span>" : "");
 	var convMessageActions = (data.isMe && data.userShow != "*" ? "<div class='messageEditButton tinyButton'>Edit</div> <div class='messageEditCancelButton tinyButton' style='display: none'>Cancel</div>" : "");
 	var newDivider = true;
@@ -954,6 +954,20 @@ api.on("replaceText", function(data){
 		$("#htmlToText").html("");
 	}
 });
+function parseChatMessage(input, userDisplay){
+	var links = input.match(/(^|\s|<br>)https?:\/\/[A-Za-z0-9\-]+\.[A-za-z0-9\/?&%;.#=\-~+!]+/g);
+	for(var i in links){
+		links[i] = links[i].trim().replace("<br>", "");
+		input = input.replace(links[i], '<a href="' + links[i].replace(/&amp;/g, "&") + '" target="_blank">' + links[i] + '</a>');
+	}
+	if(input.substr(0, 4) == "/me "){
+		input = "<i>" + userDisplay + " " + input.substr(4) + "</i>";
+	}
+	if(window.SubrosaEmoticons && window.SubrosaEmoticons.markUp){
+		input = window.SubrosaEmoticons.markUp(input);
+	}
+	return input;
+}
 function loggedInCalls(){
 	var myListItem = $(".sidebarListItem[data-item='me']");
 	myListItem.find(".listItemIcon").attr("data-status", appcore.status);

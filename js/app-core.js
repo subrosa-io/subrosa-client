@@ -503,7 +503,7 @@ function commHandler(comm, target, isFromBuffer){
 			var theMessage = "";
 			
 			if(comm.type == 2){
-				theMessage = parseChatMessage(escapeText(obj.msg), userDisplay);
+				theMessage = escapeText(obj.msg);
 				if(listItem.typings){
 					for(var i in listItem.typings){
 						if(listItem.typings[i][0] == comm.sender){
@@ -876,17 +876,6 @@ api.on("editText", function(data){
 });
 function escapeText(input){
 	return input.toString().replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
-}
-function parseChatMessage(input, userDisplay){
-	var links = input.match(/(^|\s|<br>)https?:\/\/[A-Za-z0-9\-]+\.[A-za-z0-9\/?&%;.#=\-~+!]+/g);
-	for(var i in links){
-		links[i] = links[i].trim().replace("<br>", "");
-		input = input.replace(links[i], '<a href="' + links[i].replace(/&amp;/g, "&") + '" target="_blank">' + links[i] + '</a>');
-	}
-	if(input.substr(0, 4) == "/me "){
-		input = "<i>" + userDisplay + " " + input.substr(4) + "</i>";
-	}
-	return input;
 }
 api.on("clearHistory", function(data){
 	appcore.sockemit("clearHistory", data);
