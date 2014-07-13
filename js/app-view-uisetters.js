@@ -113,8 +113,6 @@ function layContent(header, body){
 				} else if(listItem.contact == 0){
 					convHeader.find("#addContactButton,#removeFromList").show();
 					convHeader.find("#voiceButton,#videoButton,#addContactFakeButton,#removeFromContacts,#acceptContactButton").hide();
-					// pre generate key exchange message
-					api.emit("generateKeyExchange", listItem);
 				}
 				if(getProp(listItem.uid + "-blocked")){
 					$("#unblockButton").show();

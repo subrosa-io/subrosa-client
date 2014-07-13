@@ -242,6 +242,8 @@ appcore.sockon("getLists", function(data){
 		}
 		if(appcore.list[i].uid)
 			appcore.bgColorCache[appcore.list[i].uid] = appcore.list[i].bgColor;
+		if(!appcore.profileBlob.conversations[appcore.list[i].id])
+			api.emit("generateKeyExchange", {id: appcore.list[i].id});
 	}
 	api.emit("getListsResult", {});
 });
@@ -261,13 +263,17 @@ appcore.sockon("newList", function(data){
 	if(data.object.uid)
 		appcore.bgColorCache[data.object.uid] = data.object.bgColor;
 	
-	appcore.listHash[data.object.id] = appcore.list.length-1;
+	appcore.listHash[data.object.id] = appcore.list.length-1; // stores comms addressed to lists we didn't have
 	if(appcore.noListBuffer[data.object.id]){
 		for(var i in appcore.noListBuffer[data.object.id]){
 			commHandler(appcore.noListBuffer[data.object.id][i]);
 		}
 		delete appcore.noListBuffer[data.object.id];
 	}
+	
+	if(!appcore.profileBlob.conversations[data.object.id])
+		api.emit("generateKeyExchange", {id: data.object.id});
+	
 	api.emit("getListsResult", {});
 });
 api.on("addList", function(data){
@@ -343,7 +349,6 @@ api.on("changeGroupInfo", function(data){
 api.on("addContact", function(data){
 	if(data.id){
 		var listItem = appcore.list[appcore.listHash[data.id]];
-		api.emit("keyExchange", {id: data.id});
 		api.emit("sendComm", {type: 5, target: data.id, message: {msg: data.message}});
 		commHandler({type: 5, sender: appcore.uid, decrypted: {msg: data.message}, target: data.id});
 		listItem.contact = 1;
@@ -359,20 +364,26 @@ api.on("removeContact", function(data){
 		delete appcore.list[appcore.listHash[data.id]].status;
 	}
 });
-api.on("generateKeyExchange", function(data){ // data is listItem
-	if(data.keyExchange)
+api.on("generateKeyExchange", function(data){
+	var listItem = appcore.list[appcore.listHash[data.id]];
+	if(listItem.keyExchange)
+		return;
+	if(listItem.id.length == 20) // group chat
 		return;
 		
 	if(appcore.profileBlob.conversations[data.id]){
-		data.keyExchange = "existing";
+		listItem.keyExchange = "existing";
 		return;
 	}
 	
-	data.keyExchange = "pending";
-	appcore.sockemit("getPubKey", {uid: data.uid});
+	listItem.keyExchange = "pending";
+	appcore.sockemit("getPubKey", {uid: listItem.uid});
 });
 api.on("keyExchange", function(data){
 	var listItem = appcore.list[appcore.listHash[data.id]];	
+	if(!listItem.keyExchange || !listItem.keyExchange.encrypted){
+		throw new Error("keyExchange called when it is not ready");
+	}
 	if(!appcore.profileBlob.conversations[listItem.id]){
 		appcore.sockemit("comm", {type: 1, target: listItem.id, data: listItem.keyExchange.encrypted, auxdata: listItem.keyExchange.signature});
 		commHandler({type: 1, target: listItem.id, data: listItem.keyExchange.encrypted, auxdata: listItem.keyExchange.signature});
@@ -859,9 +870,6 @@ api.on("sendText", function(data){
 	appcore.list[appcore.listHash[data.target]].typingState = "";
 	clearTimeout(listItem.stoppedTypingTimeout);
 	if((listItem.keyExchange && listItem.keyExchange != "pending") || appcore.profileBlob.conversations[data.target]){
-		if(listItem.keyExchange){
-			api.emit("keyExchange", {id: data.target});
-		}
 		var currentTime = new Date().getTime();
 		listItem.lastRead = currentTime;
 		api.emit("sendComm", {target: data.target, type: 2, message: {msg: data.message}, clientTs: currentTime});
@@ -1079,32 +1087,34 @@ api.on("sendComm", function(data){
 	// data.target data.type data.message ( object {} )
 	var listItem = appcore.list[appcore.listHash[data.target]];
 	var convKey = appcore.profileBlob.conversations[listItem.id];
-	if(convKey){
-		if(data.message.t)
-			throw new Error("Message already has property 't' reserved for client timestamp", data.message);
-			
-		var shortTimestamp = Math.floor((new Date().getTime() - 1400000000000) / (60 * 60 * 1000)); // 1 hour blocks since May 14th 2014
-		
-		data.message.t = shortTimestamp;
-		
-		var iv = forge.random.getBytesSync(16);
-		var cipher = forge.cipher.createCipher('AES-GCM', convKey); 
-		
-		cipher.start({iv: iv, tagLength: 128});
-		cipher.update(forge.util.createBuffer(JSON.stringify(data.message)));
-		cipher.finish();
-		
-		var encrypted = cipher.output.data;
-		var tag = cipher.mode.tag.data;
-		
-		var auxdata = iv.toString() + tag.toString();
-		
-		var inviteToRoom = (data.inviteToRoom ? data.inviteToRoom : undefined);
-		var clientTs = (data.clientTs ? data.clientTs : undefined);
-		appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: auxdata, inviteToRoom: inviteToRoom, clientTs: clientTs});
-	} else {
-		throw new Error("No convKey available for " + listItem.id);
+	
+	if(!convKey){
+		api.emit("keyExchange", {id: listItem.id});
+		convKey = appcore.profileBlob.conversations[listItem.id];
 	}
+	
+	if(data.message.t)
+		throw new Error("Message already has property 't' reserved for client timestamp", data.message);
+		
+	var shortTimestamp = Math.floor((new Date().getTime() - 1400000000000) / (60 * 60 * 1000)); // 1 hour blocks since May 14th 2014
+	
+	data.message.t = shortTimestamp;
+	
+	var iv = forge.random.getBytesSync(16);
+	var cipher = forge.cipher.createCipher('AES-GCM', convKey); 
+	
+	cipher.start({iv: iv, tagLength: 128});
+	cipher.update(forge.util.createBuffer(JSON.stringify(data.message)));
+	cipher.finish();
+	
+	var encrypted = cipher.output.data;
+	var tag = cipher.mode.tag.data;
+	
+	var auxdata = iv.toString() + tag.toString();
+	
+	var inviteToRoom = (data.inviteToRoom ? data.inviteToRoom : undefined);
+	var clientTs = (data.clientTs ? data.clientTs : undefined);
+	appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: auxdata, inviteToRoom: inviteToRoom, clientTs: clientTs});
 });
 api.on("sendRawComm", function(data){
 	appcore.sockemit("raw", data);
