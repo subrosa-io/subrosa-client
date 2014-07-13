@@ -195,7 +195,7 @@ a:hover {
 	border-right: 1px solid #CCC;
 	cursor: pointer;
 }
-#mainScreen .listItemIcon {
+.listItemIcon {
 	font-size: 200%;
 	float: left;
 	width: 32px;
@@ -219,6 +219,9 @@ a:hover {
 	border-left: 4px solid #94E8F8;
 	margin-left: 0px;
 }
+.listItemIcon[data-status="room"] {
+	margin-left: 4px;
+}
 #mainScreen .listItemTitle {
 	margin-left: 5px;
 	font-weight: bold;
@@ -227,9 +230,10 @@ a:hover {
 	white-space: nowrap;
 }
 #mainScreen .listItemPinned {
-	position: absolute;
-	left: 49px;
-	margin-top: -4px;
+	position: relative;
+	left: -7px;
+	top: -8px;
+	width: 0px;
 	transform: rotate(38deg);
 	-webkit-transform: rotate(38deg);
 	font-size: 90%;
