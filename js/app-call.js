@@ -168,3 +168,73 @@ function stopMediaTest(){
 	if(appcall.mediaTestNode)
 		appcall.mediaTestNode.disconnect(appcall.mediaTestAudioContext);
 }
+appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDisplay){
+	var id = "panel" + Math.round(Math.random()*999999999);
+	$("body").append("<div id='" + id + "' class='videoPanel'><video></video><div class='videoPanelActions'><div class='videoName'>" + (me ? "You" : escapeText(userDisplay)) + "</div><div class='videoHangup'>End</div></div></div>");
+	var videoPanel = $("#" + id);
+	videoPanel.draggable();
+	videoPanel.find(".videoHangup").click(function(){
+		api.emit("dropCall", {target: appcore.activeCall});
+	});
+	
+	apprtc.playerCount++;
+	// default position	
+	if(me){
+		videoPanel.addClass("small");
+		if(apprtc.group){
+			videoPanel[0].style.left = (window.innerWidth-160-25) + "px";
+			videoPanel[0].style.top = "315px";
+		} else if(window.innerHeight >= 570){
+			videoPanel[0].style.left = (window.innerWidth-160-25) + "px";
+			videoPanel[0].style.top = "410px";
+		} else {
+			videoPanel[0].style.left = (window.innerWidth-400-160-15-25) + "px";
+			videoPanel[0].style.top = "95px";
+		}
+	} else if(apprtc.group){
+		pc.playerID = id;
+		videoPanel.addClass("medium");
+		videoPanel[0].style.left = (window.innerWidth-(292*(apprtc.playerCount-1))) + "px";
+		videoPanel[0].style.top = "95px";
+	} else {
+		pc.playerID = id;
+		videoPanel[0].style.left = (window.innerWidth-400-25) + "px";
+		videoPanel[0].style.top = "95px";
+	}
+	// attach video stream
+	attachMediaStream(videoPanel.find("video")[0], mediaStream);
+	videoPanel.find("video")[0].play();
+	return id;
+}
+appcall.createAudioPlayer = function createAudioPlayer(mediaStream, me, pc, userDisplay){
+	var id = "player" + Math.round(Math.random()*999999999);
+	pc.playerID = id;
+	apprtc.playerCount++;
+	
+	apprtc.audioPlayers[id] = new Audio();
+	attachMediaStream(apprtc.audioPlayers[id], mediaStream);
+	apprtc.audioPlayers[id].play();
+	return id;
+}
+appcall.removeVideoPanel = function removeVideoPanel(playerID){
+	if(playerID){
+		$("#" + playerID).remove();
+	}
+}
+appcall.removeAudioPlayer = function removeAudioPlayer(playerID){
+	if(playerID){
+		apprtc.audioPlayers[playerID].pause();
+		delete apprtc.audioPlayers[playerID];
+	}
+}
+function attachMediaStream(element, stream) {
+	if (typeof element.srcObject !== 'undefined') {
+	  element.srcObject = stream;
+	} else if (typeof element.mozSrcObject !== 'undefined') {
+	  element.mozSrcObject = stream;
+	} else if (typeof element.src !== 'undefined') {
+	  element.src = URL.createObjectURL(stream);
+	} else {
+	  console.log('Error attaching stream to element.');
+	}
+}

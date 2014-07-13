@@ -34,7 +34,7 @@ function rtcStart(mediaStream, group, video){
 	apprtc.group = group;
 	apprtc.callVideo = video;
 	if(video){
-		apprtc.localVideoPanel = createVideoPanel(mediaStream, true, false, '');
+		apprtc.localVideoPanel = appcall.createVideoPanel(mediaStream, true, false, '');
 	}
 	rtcSendSignal({type: "ready"}, null);
 	var callUsers = appcore.list[appcore.listHash[appcore.activeCall]].active.callUsers;
@@ -63,66 +63,18 @@ function rtcUserJoin(uid){
 }
 function rtcUserQuit(uid){
 	if(apprtc.pc[uid]){
-		removeVideoPanel(apprtc.pc[uid].playerID);
+		appcall.removeVideoPanel(apprtc.pc[uid].playerID);
 	}
-}
-function createVideoPanel(mediaStream, me, pc, userDisplay){
-	var id = "panel" + Math.round(Math.random()*999999999);
-	$("body").append("<div id='" + id + "' class='videoPanel'><video></video><div class='videoPanelActions'><div class='videoName'>" + (me ? "You" : escapeText(userDisplay)) + "</div><div class='videoHangup'>End</div></div></div>");
-	var videoPanel = $("#" + id);
-	videoPanel.draggable();
-	videoPanel.find(".videoHangup").click(function(){
-		api.emit("dropCall", {target: appcore.activeCall});
-	});
-	
-	apprtc.playerCount++;
-	// default position	
-	if(me){
-		videoPanel.addClass("small");
-		if(apprtc.group){
-			videoPanel[0].style.left = (window.innerWidth-160-25) + "px";
-			videoPanel[0].style.top = "315px";
-		} else if(window.innerHeight >= 570){
-			videoPanel[0].style.left = (window.innerWidth-160-25) + "px";
-			videoPanel[0].style.top = "410px";
-		} else {
-			videoPanel[0].style.left = (window.innerWidth-400-160-15-25) + "px";
-			videoPanel[0].style.top = "95px";
-		}
-	} else if(apprtc.group){
-		pc.playerID = id;
-		videoPanel.addClass("medium");
-		videoPanel[0].style.left = (window.innerWidth-(292*(apprtc.playerCount-1))) + "px";
-		videoPanel[0].style.top = "95px";
-	} else {
-		pc.playerID = id;
-		videoPanel[0].style.left = (window.innerWidth-400-25) + "px";
-		videoPanel[0].style.top = "95px";
-	}
-	// attach video stream
-	attachMediaStream(videoPanel.find("video")[0], mediaStream);
-	videoPanel.find("video")[0].play();
-	return id;
-}
-function createAudioPlayer(mediaStream, me, pc, userDisplay){
-	var id = "player" + Math.round(Math.random()*999999999);
-	pc.playerID = id;
-	apprtc.playerCount++;
-	
-	apprtc.audioPlayers[id] = new Audio();
-	attachMediaStream(apprtc.audioPlayers[id], mediaStream);
-	apprtc.audioPlayers[id].play();
-	return id;
 }
 function rtcStop(){
 	if(apprtc.callVideo){
-		removeVideoPanel(apprtc.localVideoPanel);
+		appcall.removeVideoPanel(apprtc.localVideoPanel);
 		for(var i in apprtc.pc){
-			removeVideoPanel(apprtc.pc[i].playerID);
+			appcall.removeVideoPanel(apprtc.pc[i].playerID);
 		}
 	} else {
 		for(var i in apprtc.pc){
-			removeAudioPlayer(apprtc.pc[i].playerID);
+			appcall.removeAudioPlayer(apprtc.pc[i].playerID);
 		}
 	}
 	apprtc.mediaStream = null;
@@ -130,28 +82,6 @@ function rtcStop(){
 	apprtc.playerCount = 0;
 	apprtc.localVideoPanel = null;
 	apprtc.callVideo = null;
-}
-function removeVideoPanel(playerID){
-	if(playerID){
-		$("#" + playerID).remove();
-	}
-}
-function removeAudioPlayer(playerID){
-	if(playerID){
-		apprtc.audioPlayers[playerID].pause();
-		delete apprtc.audioPlayers[playerID];
-	}
-}
-function attachMediaStream(element, stream) {
-	if (typeof element.srcObject !== 'undefined') {
-	  element.srcObject = stream;
-	} else if (typeof element.mozSrcObject !== 'undefined') {
-	  element.mozSrcObject = stream;
-	} else if (typeof element.src !== 'undefined') {
-	  element.src = URL.createObjectURL(stream);
-	} else {
-	  console.log('Error attaching stream to element.');
-	}
 }
 function createPeerConnection(uid) {
 	var pc = new RTCPeerConnection(apprtc.pc_config, apprtc.pc_constraints);
@@ -200,9 +130,9 @@ function handleIceCandidate(event){
 function handleRemoteStreamAdded(event){
 	var userItem = getUserItem(event.target.uid); // appcore
 	if(apprtc.callVideo){
-		createVideoPanel(event.stream, false, event.target, userItem.displayname || userItem.username);
+		appcall.createVideoPanel(event.stream, false, event.target, userItem.displayname || userItem.username);
 	} else {
-		createAudioPlayer(event.stream, false, event.target, userItem.displayname || userItem.username);
+		appcall.createAudioPlayer(event.stream, false, event.target, userItem.displayname || userItem.username);
 	}
 	setTimeout(function(){
 		verifyFingerprint(event.target.uid, apprtc.pc[event.target.uid].remoteDescription.sdp, apprtc.pc[event.target.uid].localDescription.sdp);
@@ -221,7 +151,6 @@ function gotReceiveChannel(){
 	console.log("gotReceiveChannel");
 }
 function rtcProcessSignal(object, to, sender){
-	console.log("Got " + object.type);
 	if(object.type == "candidate"){
 		setTimeout(function(){
 			try {
@@ -259,7 +188,6 @@ function rtcProcessSignal(object, to, sender){
 	}
 }
 function rtcSendSignal(object, to){
-	console.log("Sent " + object.type);
 	api.emit("sendComm", {target: appcore.activeCall, type: 10, message: {o: object, to: to}});
 }
 function verifyFingerprint(uid, remoteSdp, localSdp){
