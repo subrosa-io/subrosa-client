@@ -341,22 +341,10 @@ function mainAppHooks(){
 			return;
 		}
 		$("#addContactButton").removeClass("active");
-		var listItem = appcore.list[appcore.listHash[currentTab]];
-		var emitFunction = function(){
-			api.emit("addContact", {id: currentTab, message: $(".requestTextarea").val()});
-			layContent(true, false);
-			$(".addContactButton").popover($(".addContactPopover"));
-		}
-		if(listItem.keyExchange && listItem.keyExchange != "pending"){
-			emitFunction();
-		} else {
-			var waitInterval = setInterval(function(){
-				if(listItem.keyExchange){
-					clearInterval(waitInterval);
-					emitFunction();
-				}
-			}, 500);
-		}
+		
+		api.emit("addContact", {id: currentTab, message: $(".requestTextarea").val()});
+		layContent(true, false);
+		$(".addContactButton").popover($(".addContactPopover"));
 	});
 	$("#convButtons").on("click", "button", convButtonClick);
 	$(".convMorePopover").on("click", "li", convButtonClick);

@@ -14,7 +14,7 @@ var api = {
 		this.map[type].push(handler)
 	}
 };
-var appcore = {version: 0.25, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], bgColorCache: [], currentUploadTarget:""};
+var appcore = {version: 0.25, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], currentUploadTarget:""};
 appcore.sockemit = function(type, message){
 	if(!appcore.sock){
 		throw new Error("No socket is defined.");
@@ -215,7 +215,7 @@ appcore.sockon("loginMain", function(data){
 				appcore.status = data.status;
 				appcore.avatar = data.avatar;
 				appcore.uid = data.uid;
-				appcore.bgColorCache[appcore.uid] = data.bgColor;
+				appcore.bgColor = data.bgColor;
 				api.emit("loginMainResult", {status: "OK"});
 				updateBlob();
 				
@@ -240,8 +240,6 @@ appcore.sockon("getLists", function(data){
 		if(appcore.list[i].active && appcore.list[i].id.length == 20){
 			api.emit("callUpdate", {state: "CALLING", oldState: "", target: appcore.list[i].id, callType: appcore.list[i].active.type});
 		}
-		if(appcore.list[i].uid)
-			appcore.bgColorCache[appcore.list[i].uid] = appcore.list[i].bgColor;
 		if(!appcore.profileBlob.conversations[appcore.list[i].id])
 			api.emit("generateKeyExchange", {id: appcore.list[i].id});
 	}
@@ -260,8 +258,6 @@ appcore.sockon("newList", function(data){
 	if(data.object.active && data.object.id.length == 20){
 		api.emit("callUpdate", {state: "CALLING", oldState: "", target: data.object.id, callType: data.object.type});
 	}
-	if(data.object.uid)
-		appcore.bgColorCache[data.object.uid] = data.object.bgColor;
 	
 	appcore.listHash[data.object.id] = appcore.list.length-1; // stores comms addressed to lists we didn't have
 	if(appcore.noListBuffer[data.object.id]){
@@ -332,9 +328,9 @@ api.on("changeProfile", function(data){
 		data.derivedKeyHash = appcore.derivedKeyHash;
 		data.derivedKeySalt = appcore.derivedKeySalt;
 	}
-	if(data.bgColor){
-		appcore.bgColorCache[appcore.uid] = data.bgColor;
-	}
+	if(data.bgColor)
+		appcore.bgColor = data.bgColor;
+		
 	appcore.sockemit("changeProfile", data);
 });
 api.on("changeGroupInfo", function(data){
@@ -501,8 +497,7 @@ function commHandler(comm, target, isFromBuffer){
 				if(!comm.username){
 					alert("DEBUG: No userInfo & no comm.username");
 				} else {
-					appcore.userList[comm.sender] = {username: comm.username};
-					appcore.bgColorCache[comm.sender] = comm.bgColor;
+					appcore.userList[comm.sender] = {username: comm.username, bgColor: comm.bgColor};
 					userInfo = appcore.userList[comm.sender];
 					api.emit("notify", {type: "userIdentified", target: target});
 				}
@@ -644,7 +639,8 @@ function commHandler(comm, target, isFromBuffer){
 					appcore.bufferTimestampIgnore.push(comm.time + target);
 				}
 				listItem.canMarkRead = true;
-				api.emit("newText", {user: comm.sender, userShow: (comm.type == 2 ? userDisplay : "*"), message: theMessage, isMe: isMe, timestamp: comm.time, target: target, unread: unread, isFromBuffer: isFromBuffer, bgColor: (appcore.bgColorCache[comm.sender] ? appcore.bgColorCache[comm.sender] : '')});
+				
+				api.emit("newText", {user: comm.sender, userShow: (comm.type == 2 ? userDisplay : "*"), message: theMessage, isMe: isMe, timestamp: comm.time, target: target, unread: unread, isFromBuffer: isFromBuffer, bgColor: getUserItem(comm.sender).bgColor});
 				
 				if(comm.type == 2 && appcore.bufferTimestampReplace[comm.time] && appcore.bufferTimestampReplace[comm.time].target == target){
 					api.emit("replaceText", appcore.bufferTimestampReplace[comm.time]); // sanity checks performed by app-view.js
@@ -1204,7 +1200,6 @@ api.on("logout", function(data){
 	appcore.bufferTimestampReplace = [];
 	appcore.userList = [];
 	appcore.noListBuffer = [];
-	appcore.bgColorCache = [];
 	appcore.derivedKeyHash = "";
 	appcore.derivedKey = "";
 	appcore.derivedKeySalt = "";
