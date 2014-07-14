@@ -11,11 +11,11 @@ var util = require('util');
 var Stream = require('stream');
 
 gulp.task('clean', function(cb) {
-  return del(['dist'], cb);
+  del(['dist'], cb);
 });
 
 gulp.task('lint', function() {
-  return gulp.src('src/**/*.js')
+  gulp.src('src/**/*.js')
     .pipe(jshint())
     .pipe(jshint.reporter(jshintStylish))
     .pipe(jshint.reporter('fail'));
@@ -36,8 +36,7 @@ gulp.task('build', ['clean'], function() {
   
   var static = gulp.src(['src/fonts/*', 'src/img/**/*', 'src/sound/*'], { base: 'src' });
   
-  return merge(document, assets, static)
-    .pipe(gulp.dest('dist'));
+  merge(document, assets, static).pipe(gulp.dest('dist'));
 });
 
 /*
