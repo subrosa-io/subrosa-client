@@ -23,7 +23,7 @@ gulp.task('build', ['clean'], function() {
     .pipe(usemin({
       'css': ['concat', minifyCss()],
       'app-js': ['concat', uglify()],
-      'vendor-js': ['concat']
+      'vendor-js': ['concat', uglify()]
     }))
     .pipe(gulp.dest('dist'));
   
