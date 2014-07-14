@@ -1,0 +1,18 @@
+{
+  "name": "subrosa-client",
+  "version": "0.26.0",
+  "description": "secure, end-to-end encrypted messaging, voice and video chats",
+  "main": "gulpfile.js",
+  "license": "GPLv3",
+  "homepage": "https://subrosa.io/",
+  "devDependencies": {
+    "del": "^0.1.1",
+    "gulp": "^3.8.6",
+    "gulp-jshint": "^1.7.1",
+    "gulp-minify-css": "^0.3.6",
+    "gulp-uglify": "^0.3.1",
+    "gulp-usemin": "^0.3.5",
+    "jshint-stylish": "^0.4.0",
+    "merge-stream": "^0.1.5"
+  }
+}

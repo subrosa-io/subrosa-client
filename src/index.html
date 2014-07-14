@@ -18,11 +18,30 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 -->
 <head>
 	<title>Subrosa</title>
+	<link id="favicon" rel="shortcut icon" type="image/png" href="img/favicon.png" />
+	
+	<!-- build:css(src) css/app.css -->
 	<link rel="stylesheet" type="text/css" href="css/main.css">
 	<link rel="stylesheet" type="text/css" href="css/app.css">
 	<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
 	<link rel="stylesheet" type="text/css" href="css/image-emoticons.css" />
-	<link id="favicon" rel="shortcut icon" type="image/png" href="img/favicon.png" />
+	<!-- endbuild -->
+	
+	<!-- build:vendorjs(src) vendor.js -->
+	<script src="js/engineio.min.js"></script>
+	<script src="js/forge.min.js"></script>
+	<script src="js/jquery.min.js"></script>
+	<!-- endbuild -->
+	
+	<!-- build:appjs(src) app.js -->
+	<script src="js/app-call.js"></script>
+	<script src="js/app-core.js"></script>
+	<script src="js/app-emoticons.js"></script>
+	<script src="js/app-view-uifuncs.js"></script>
+	<script src="js/app-view-uisetters.js"></script>
+	<script src="js/app-view.js"></script>
+	<script src="js/app-webrtc.js"></script>
+	<!-- endbuild -->
 </head>
 <body>	
 	<div class="preloader">
@@ -476,21 +495,6 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 	</div>
 	<div class="hide" id="htmlToText"></div>
 	
-	
-	<!--<script src="js/subrosa.min.js"></script>-->
-	<!-- See Minify.sh for how to generate the minified version -->
-	
-	<script src="js/jquery.min.js"></script>
-	<script src="js/forge.min.js"></script>
-	<script src="js/engineio.min.js"></script>
-	<script src="js/app-core.js"></script>
-	<script src="js/app-view-uisetters.js"></script>
-	<script src="js/app-view-uifuncs.js"></script>
-	<script src="js/app-view.js"></script>
-	<script src="js/app-call.js"></script>
-	<script src="js/app-webrtc.js"></script>
-	<script src="js/app-emoticons.js"></script>
-
 	<!-- Sound -->
 	<audio src="sound/newMessage.ogg" id="soundNewMessage" preload="auto"></audio>
 	<audio src="sound/ringing.ogg" id="soundRinging" preload="auto"></audio>
