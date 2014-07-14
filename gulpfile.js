@@ -15,7 +15,7 @@ gulp.task('clean', function(cb) {
 });
 
 gulp.task('lint', function() {
-  gulp.src('src/**/*.js')
+  gulp.src('src/js/*.js')
     .pipe(jshint())
     .pipe(jshint.reporter(jshintStylish))
     .pipe(jshint.reporter('fail'));
