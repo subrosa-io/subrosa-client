@@ -240,11 +240,11 @@ function mainAppHooks(){
 		$("#mainScreen").css("position", "relative").fadeIn(300);
 		changeTabTo("home");
 	}
-	if(navigator.userAgent.indexOf("Chrome") != -1){
+	if(navigator.userAgent.indexOf("Chrome") != -1 && window.Notification){
 		$(".permissionsWebkit").removeClass("hide");
 		if(window.Notification.permission === "granted")
 			hasNotificationPerm = true;
-	} else if(navigator.userAgent.indexOf("Firefox") != -1){
+	} else if(navigator.userAgent.indexOf("Firefox") != -1 && window.Notification){
 		$(".permissionsMozilla").removeClass("hide");
 		if(Notification.permission == "granted")
 			hasNotificationPerm = true;
