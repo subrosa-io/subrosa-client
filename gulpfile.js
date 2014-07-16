@@ -3,9 +3,9 @@ var gulp = require('gulp');
 var gulpFilter = require('gulp-filter');
 var jshint = require('gulp-jshint');
 var minifyCss = require('gulp-minify-css');
-var minifyHtml = require('gulp-minify-html');
 var uglify = require('gulp-uglify');
-var usemin = require('gulp-usemin');
+var useref = require('gulp-useref');
+var gulpif = require('gulp-if');
 var jshintStylish = require('jshint-stylish');
 var merge = require('merge-stream');
 
@@ -21,19 +21,15 @@ gulp.task('lint', function() {
 });
 
 gulp.task('build', ['clean'], function() {
-  var htmlFilter = gulpFilter('index.html');
   var app = gulp.src('src/index.html')
-    .pipe(usemin({
-      'css': ['concat', minifyCss()],
-      'app-js': ['concat', uglify()],
-      'vendor-js': ['concat', uglify()]
-    }))
-    .pipe(htmlFilter)
-    .pipe(minifyHtml())
-    .pipe(htmlFilter.restore());
+	.pipe(useref.assets())
+	.pipe(gulpif('*.js', uglify()))
+	.pipe(gulpif('*.css', minifyCss()))
+	.pipe(useref.restore())
+	.pipe(useref())
   
   var static = gulp.src(['src/fonts/*', 'src/img/**/*', 'src/sound/*'], { base: 'src' });
   
-  merge(app, static)
+  return merge(app, static)
     .pipe(gulp.dest('dist'));
 });
