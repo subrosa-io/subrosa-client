@@ -1,6 +1,5 @@
 var del = require('del');
 var gulp = require('gulp');
-var gulpFilter = require('gulp-filter');
 var jshint = require('gulp-jshint');
 var minifyCss = require('gulp-minify-css');
 var uglify = require('gulp-uglify');
@@ -14,10 +13,9 @@ gulp.task('clean', function(cb) {
 });
 
 gulp.task('lint', function() {
-  gulp.src('src/js/*.js')
+  return gulp.src(['gulpfile.js', 'src/js/*.js'])
     .pipe(jshint())
-    .pipe(jshint.reporter(jshintStylish))
-    .pipe(jshint.reporter('fail'));
+    .pipe(jshint.reporter(jshintStylish));
 });
 
 gulp.task('build', ['clean'], function() {
