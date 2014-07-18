@@ -227,7 +227,8 @@ appcall.removeVideoPanel = function removeVideoPanel(playerID){
 }
 appcall.removeAudioPlayer = function removeAudioPlayer(playerID){
 	if(playerID){
-		apprtc.audioPlayers[playerID].pause();
+		if(apprtc.audioPlayers[playerID])
+			apprtc.audioPlayers[playerID].pause();
 		delete apprtc.audioPlayers[playerID];
 	}
 }

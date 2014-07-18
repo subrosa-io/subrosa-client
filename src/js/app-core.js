@@ -658,7 +658,7 @@ function commHandler(comm, target, isFromBuffer){
 }
 function handleRoomCallQuit(target, quitter){
 	var listItem = appcore.list[appcore.listHash[target]];
-	if(listItem.active.callUsers.indexOf(quitter) != -1){
+	if(listItem.active && listItem.active.callUsers.indexOf(quitter) != -1){
 		listItem.active.callUsers.splice(listItem.active.callUsers.indexOf(quitter), 1);
 		if(listItem.active.callUsers.length == 0){
 			listItem.active = -1;
