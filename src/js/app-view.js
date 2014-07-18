@@ -517,6 +517,10 @@ function mainAppHooks(){
 		api.emit("setProp", {name: "disableNotifications", value: !this.checked});
 		// store as disableNotifications as default behavior is false
 	});
+	$("#enableEmoticonsCheckbox").change(function(){
+		api.emit("setProp", {name: "disableEmoticons", value: !this.checked});
+		layContent(false, false); 
+	});
 	$("#roomInviteConfirm").click(function(){
 		if($(this).hasClass("disabled"))
 			return;
@@ -743,6 +747,16 @@ function mainAppHooks(){
 	$("#errorReporterIgnore").click(function(){
 		$.modal("errorReporter", "hide");
 	});
+	if(window.SubrosaEmoticons){
+		window.SubrosaEmoticons.generatePicker($("#emojiPicker"), $("#convInput"));
+	}
+	$("#convEmoticon").click(function(){
+		$(this).popover($("#convEmoticonPopover"));
+	});
+	$("#emojiPicker").on("click", ".emoji", function(){
+		$("#convEmoticon").popover($("#convEmoticonPopover"));
+		$("#convInput").focus().moveCaretToEnd();
+	});
 }
 var lastTab = "";
 var currentTab = "";
@@ -951,7 +965,7 @@ function parseChatMessage(input, userDisplay){
 	if(input.substr(0, 4) == "/me "){
 		input = "<i>" + userDisplay + " " + input.substr(4) + "</i>";
 	}
-	if(window.SubrosaEmoticons && window.SubrosaEmoticons.markUp){
+	if(window.SubrosaEmoticons && window.SubrosaEmoticons.markUp && !getProp("disableEmoticons")){
 		input = window.SubrosaEmoticons.markUp(input);
 	}
 	return input;
@@ -981,6 +995,8 @@ function loggedInCalls(){
 		$("#ringingVolumeSlider").val(getProp("ringingVolume")*100);
 	if(getProp("disableNotifications"))
 		$("#enableNotificationsCheckbox").attr("checked", false);
+	if(getProp("disableEmoticons"))
+		$("#enableEMoticonsCheckbox").attr("checked", false);
 }
 const shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function friendlyTime(timeMs){

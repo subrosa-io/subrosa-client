@@ -573,14 +573,21 @@ a:hover {
 	resize: horizontal;
 	vertical-align: top;
 }
-#convSmiley {
+#convEmoticon {
 	color: #5C5C5C;
 	margin-top: 4px;
 	margin-left: 3px;
 	cursor: pointer;
 }
-#convSmiley:hover {
+#convEmoticon:hover {
 	color: #000;
+}
+#emojiPicker {
+	width: 175px;
+}
+#emojiPicker .emoji {
+	margin: 0 3px 3px 0;
+	cursor: pointer;
 }
 #convFooter {
 	background: #F7F7F7;

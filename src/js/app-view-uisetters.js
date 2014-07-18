@@ -218,6 +218,11 @@ function layContent(header, body){
 			convFooter.find("#encInfoEncrypted,#encPopoverEncrypted").show();
 			convFooter.find("#encKey").text(appcore.profileBlob.conversations[listItem.id]);
 		}
+		if(getProp("disableEmoticons")){
+			convFooter.find("#convEmoticon").hide();
+		} else {
+			convFooter.find("#convEmoticon").show();
+		}
 		if(body){
 			curTab.find("#convText").html((!listItem.hasBundle ? "<div id='bufferLoading'>Loading..</div>": (listItem.hasBundle == 1 ? "<a id='bufferMore' href='javascript:;'><span class='fa fa-clock-o'></span>Decrypt earlier history</a>" : "")) + convBodyHolders[curItem].buffer.join("") + "<div id='bufferLiveDivider'></div>" + convBodyHolders[curItem].live.join(""));
 			curTab.find("#convText")[0].scrollTop = curTab.find("#convText")[0].scrollHeight;

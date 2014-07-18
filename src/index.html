@@ -69,7 +69,8 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 					<span>Ringer Volume</span><br />
 					<input id="ringerVolumeSlider" type="range" min="0" max="100" step="1" value="70" /><br />
 					<hr />
-					<input id="enableNotificationsCheckbox" type="checkbox" checked /> <span>Enable notifications</span>
+					<input id="enableNotificationsCheckbox" type="checkbox" checked /> <span>Enable notifications</span><br />
+					<input id="enableEmoticonsCheckbox" type="checkbox" checked /> <span>Enable <i class="emoji emoji-smile"></i> emoticons</span>
 				</div>
 			</div>
 		</div>
@@ -373,7 +374,14 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 							<div id="convFooterMiddle">
 								<span id="convTyping"></span><br />
 								<textarea id="convInput"></textarea>
-								<span id="convSmiley" class="fa fa-smile-o" style="display: none"></span>
+								<span id="convEmoticon" class="fa fa-smile-o"></span>
+								<div id="convEmoticonPopover" class="popover popoverBottom" style="display: none">
+									<div class="popoverContent">
+										<div id="emojiPicker"></div>
+										<small><a href="http://www.emoji-cheat-sheet.com/" target="_blank">View all Emoticons</a></small>
+									</div>
+									<div class="popoverCaret caretBottom"></div>
+								</div>
 							</div>
 						</div>
 					</div>
