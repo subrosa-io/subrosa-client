@@ -15,7 +15,7 @@
 				var innerCode = colonMatches[i].substr(1).substr(0, colonMatches[i].length-2)
 				
 				if(emojis.indexOf(innerCode) !== -1){
-					msg = msg.replace(colonMatches[i], '<i class="emoji emoji-' + innerCode + '" data-c=":' + innerCode + ':"></i>');
+					msg = msg.replace(colonMatches[i], '<i class="emoji emoji-' + innerCode + '" data-c="(' + innerCode + ')"></i>');
 				}
 			}
 		}
