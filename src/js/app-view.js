@@ -1205,7 +1205,7 @@ api.on("homeData", function(data){
 	var homeNewsHTML = "";
 	for(var i in data.news){
 		if(!data.news[i].link || data.news[i].link.substr(0,7) == "http://" || data.news[i].link.substr(0,8) == "https://"){
-			homeNewsHTML += '<div class="homeNewsElem">' + (data.news[i].link ? '<a href="' + escapeText(data.news[i].link) + '" target="_blank">' : '') + '<span class="title">' + escapeText(data.news[i].title) + '</span>' + (data.news[i].link ? '</a>' : '') + '<span class="time">' + (data.news[i].time ? friendlyTime(data.news[i].time) : '') + '</span><span class="content">' + escapeText(data.news[i].content) + '</span></div>';
+			homeNewsHTML += '<div class="homeNewsElem">' + (data.news[i].link ? '<a href="' + escapeText(data.news[i].link) + '" target="_blank">' : '') + '<span class="title">' + escapeText(data.news[i].title) + '</span>' + (data.news[i].link ? '</a>' : '') + '<span class="time">' + (data.news[i].time ? friendlyTime(data.news[i].time) : '') + '</span><span class="content">' + SubrosaEmoticons.markUp(escapeText(data.news[i].content)) + '</span></div>';
 		}
 	}
 	homeNewsHTML += '</div>';
