@@ -7,7 +7,7 @@ apprtc.callVideo = null;
 apprtc.pc = [];
 apprtc.audioPlayers = [];
 apprtc.group = null;
-apprtc.pc_config = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}, {'url': 'turn:subrosa@46.28.205.143:3478', 'credential': 'turnserver'}]};
+apprtc.pc_config = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}, {'url': 'turn:46.28.205.143:3478', 'credential': 'turnserver', username: 'subrosa'}]};
 apprtc.pc_constraints = {'optional': [{'DtlsSrtpKeyAgreement': true},{'RtpDataChannels': true}]};
 apprtc.sdpVoiceConstraints = {'mandatory': {'OfferToReceiveAudio':true}};
 apprtc.sdpVideoConstraints = {'mandatory': {'OfferToReceiveAudio':true,'OfferToReceiveVideo':true }};
@@ -97,6 +97,7 @@ function createPeerConnection(uid) {
 	pc.onremovestream = handleRemoteStreamRemoved;
 }
 function rtcCall(pc){
+	pc.sentOffer = true;
 	pc.createOffer(function(sessionDescription){
 		pc.setLocalDescription(sessionDescription);
 		rtcSendSignal({type: "offer", sessionDescription: sessionDescription}, pc.uid);
@@ -129,22 +130,20 @@ function handleRemoteStreamRemoved(event){
 }
 function rtcProcessSignal(object, to, sender){
 	if(object.type == "candidate"){
-		setTimeout(function(){
-			try {
-				apprtc.pc[sender].addIceCandidate(new RTCIceCandidate({candidate: object.candidate, sdpMLineIndex: object.label}));
-			} catch (error) {
-				console.log("Error adding candidate " + object.candidate.length, error);
-			}
-		}, 10);
+		try {
+			apprtc.pc[sender].addIceCandidate(new RTCIceCandidate({candidate: object.candidate, sdpMLineIndex: object.label}));
+		} catch (error) {
+			console.log("Error adding candidate " + object.candidate.length, error);
+		}
 	} else if(object.type == "ready"){
-		if(apprtc.playerCount>0 || (!apprtc.callVideo && apprtc.mediaStream)){ // I am ready
-			if(!apprtc.pc[sender].playerID){
+		if(apprtc.playerCount>0 || (!apprtc.callVideo && apprtc.mediaStream)){
+			if(!apprtc.pc[sender].sentOffer){
 				rtcCall(apprtc.pc[sender]);
 				rtcSendSignal({type: "ackReady"}, sender);
 			}
 		}
 	} else if(object.type == "ackReady" && to == appcore.uid){
-		if(!apprtc.pc[sender].playerID){
+		if(!apprtc.pc[sender].sentOffer){
 			rtcCall[apprtc.pc[sender]];
 		}
 	} else if(object.type == "offer" && to == appcore.uid){

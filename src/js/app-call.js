@@ -22,7 +22,7 @@ function startCallInput(group, type){
 		if(!group && appcore.activeCall.substr(4).split("-")[0] == appcore.uid){
 			setTimeout(function(){
 				rtcStart(appcall.mediaStream, group, (type == "video"));
-			}, 400); // Hacky race condition fix.
+			}, 100); // Hacky race condition fix.
 		} else {
 			rtcStart(appcall.mediaStream, group, (type == "video"));
 		}
@@ -180,8 +180,7 @@ appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDi
 	
 	apprtc.playerCount++;
 	// default position	
-	if(me){
-		videoPanel[0].muted = true; // prevent audio loopback
+	if(me){ // prevent audio loopback
 		videoPanel.addClass("small");
 		if(apprtc.group){
 			videoPanel[0].style.left = (window.innerWidth-160-25) + "px";
@@ -206,6 +205,9 @@ appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDi
 	// attach video stream
 	attachMediaStream(videoPanel.find("video")[0], mediaStream);
 	videoPanel.find("video")[0].play();
+	if(me){
+		videoPanel.find("video")[0].muted = true;
+	}
 	return id;
 }
 appcall.createAudioPlayer = function createAudioPlayer(mediaStream, me, pc, userDisplay){
