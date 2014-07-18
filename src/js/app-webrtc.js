@@ -177,7 +177,7 @@ function rtcProcessSignal(object, to, sender){
 			apprtc.pc[sender].createAnswer(function(sessionDescription){
 				apprtc.pc[sender].setLocalDescription(sessionDescription);
 				rtcSendSignal({type: "answer", sessionDescription: sessionDescription}, sender)
-			}, function(){}, apprtc.sdpVideoConstraints);
+			}, function(){}, (apprtc.callVideo ? apprtc.sdpVideoConstraints : apprtc.sdpVoiceConstraints));
 		}
 	} else if(object.type == "answer" && to == appcore.uid){
 		if(apprtc.pc[sender]){
