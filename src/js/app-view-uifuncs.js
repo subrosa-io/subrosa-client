@@ -94,6 +94,12 @@ jQuery.fn.popover = function(obj){
 	lastTrigger = triggerElement;
 };
 var activeModal;
+$(document).ready(function(){
+	$("#overlay,#modalClose").click(function(){
+		(activeModal && $.modal('', 'hide'));
+	});
+	$("#modal").draggable();
+});
 function keepPosModals(){
 	if(activeModal){
 		var left = window.innerWidth/2 - activeModal.outerWidth()/2;
@@ -103,9 +109,6 @@ function keepPosModals(){
 		activeModal.css({left: left+"px", top: top+"px"});
 	}
 }
-$("#overlay,#modalClose").click(function(){
-	(activeModal && $.modal('', 'hide'));
-});
 jQuery.fn.moveCaretToEnd = function(){
 	var el = $(this)[0];
     if (typeof el.selectionStart == "number") {
@@ -122,7 +125,7 @@ jQuery.fn.draggable = function(){
 	var lastPos = [0,0];
 	$(this).mousedown(function(event){
 		if(event.target.tagName == "SELECT" || event.target.tagName == "P" || event.target.tagName == "SPAN" || event.target.tagName == "PRE")
-			return;
+			return console.log(event.target.tagName);
 		if(event.which===1){
 			dragging = true;
 			lastPos = [event.pageX, event.pageY];
@@ -143,7 +146,6 @@ jQuery.fn.draggable = function(){
 		$("body").unbind("mousemove.videoPanelDrag");
 	});
 }
-$("#modal").draggable();
 jQuery.modal = function(ref, state){
 	var thisModal = $("#modal");
 	if(!$(thisModal).is(":visible") && (!state || state == 'show')){
