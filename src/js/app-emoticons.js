@@ -40,7 +40,7 @@
 		$div.html(generatedHTML);
 		
 		$div.on("click", ".emoji", function(event){
-			$insertInput.val( $insertInput.val() + " :" + $(this).attr("data-c") + ": " );
+			$insertInput.val( $insertInput.val() + " " + $(this).attr("data-c") + " " );
 		});
 	}
 }).call(window.SubrosaEmoticons = {});
