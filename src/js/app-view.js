@@ -1098,7 +1098,12 @@ function newNotification(icon, title, content, closeAfter, showWithFocus){
 	}
 	
 	title = $("#htmlToText").html(title).text();
-	content = $("#htmlToText").html(content).text();
+	content = $("#htmlToText").html(content);
+	$("#htmlToText .emoji").each(function(){
+		$(this).before($(this).attr("data-c"));
+	});
+	content = $("#htmlToText").text();
+	
 	if(title.length > 100)
 		title = title.substr(0,98) + "..";
 	if(content.length > 100)

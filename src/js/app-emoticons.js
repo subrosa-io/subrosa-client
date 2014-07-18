@@ -15,7 +15,7 @@
 				var innerCode = colonMatches[i].substr(1).substr(0, colonMatches[i].length-2)
 				
 				if(emojis.indexOf(innerCode) !== -1){
-					msg = msg.replace(colonMatches[i], '<i class="emoji emoji-' + innerCode + '" data-c="' + innerCode + '"></i>');
+					msg = msg.replace(colonMatches[i], '<i class="emoji emoji-' + innerCode + '" data-c=":' + innerCode + ':"></i>');
 				}
 			}
 		}
@@ -25,7 +25,7 @@
 		for(var shortcut in shortcutMap){
 			while(msg.indexOf(' ' + shortcut) !== -1){
 				var shortcutBegin = msg.indexOf(' ' + shortcut);
-				msg = msg.substr(0, shortcutBegin) + ' <i class="emoji emoji-' + shortcutMap[shortcut] + '" data-c="' + shortcutMap[shortcut] + '"></i>' + msg.substr(shortcutBegin+1+shortcut.length);
+				msg = msg.substr(0, shortcutBegin) + ' <i class="emoji emoji-' + shortcutMap[shortcut] + '" data-c="' + shortcut + '"></i>' + msg.substr(shortcutBegin+1+shortcut.length);
 			}
 		}
 
@@ -35,7 +35,7 @@
 	this.generatePicker = function($div, $insertInput) {
 		var generatedHTML = "";
 		for(var i = 0; i < pickerSubset.length; i++){
-			generatedHTML += '<i class="emoji emoji-' + pickerSubset[i] + '" data-c="' + pickerSubset[i] + '"></i>';
+			generatedHTML += '<i class="emoji emoji-' + pickerSubset[i] + '" data-c=":' + pickerSubset[i] + ':"></i>';
 		}
 		$div.html(generatedHTML);
 		
