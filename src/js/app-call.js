@@ -71,6 +71,7 @@ function stopCallInput(type){
 function setMicrophoneMute(muted){
 	appcall.micMute = muted;
 	if(appcall.mediaStream){
+		console.log(appcall.mediaStream.getAudioTracks().length);
 		appcall.mediaStream.getAudioTracks()[0].enabled = !muted;
 	}
 }
@@ -180,6 +181,7 @@ appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDi
 	apprtc.playerCount++;
 	// default position	
 	if(me){
+		videoPanel[0].muted = true; // prevent audio loopback
 		videoPanel.addClass("small");
 		if(apprtc.group){
 			videoPanel[0].style.left = (window.innerWidth-160-25) + "px";

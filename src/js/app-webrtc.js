@@ -7,13 +7,10 @@ apprtc.callVideo = null;
 apprtc.pc = [];
 apprtc.audioPlayers = [];
 apprtc.group = null;
-apprtc.pc_config = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}, {'url': 'turn:46.28.205.143:3478', 'credential': 'turnserver', username: 'subrosa'}]};
+apprtc.pc_config = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}, {'url': 'turn:subrosa@46.28.205.143:3478', 'credential': 'turnserver'}]};
 apprtc.pc_constraints = {'optional': [{'DtlsSrtpKeyAgreement': true},{'RtpDataChannels': true}]};
 apprtc.sdpVoiceConstraints = {'mandatory': {'OfferToReceiveAudio':true}};
 apprtc.sdpVideoConstraints = {'mandatory': {'OfferToReceiveAudio':true,'OfferToReceiveVideo':true }};
-
-
-var dataChannelsEnabled = false; // currently unused
 
 if(typeof webkitRTCPeerConnection != 'undefined'){
 	RTCPeerConnection = webkitRTCPeerConnection;
@@ -63,7 +60,11 @@ function rtcUserJoin(uid){
 }
 function rtcUserQuit(uid){
 	if(apprtc.pc[uid]){
-		appcall.removeVideoPanel(apprtc.pc[uid].playerID);
+		if(apprtc.callVideo){
+			appcall.removeVideoPanel(apprtc.pc[uid].playerID);
+		} else {
+			appcall.removeAudioPlayer(apprtc.pc[uid].playerID);
+		}
 	}
 }
 function rtcStop(){
@@ -89,24 +90,11 @@ function createPeerConnection(uid) {
 	pc.uid = uid;
 	pc.onicecandidate = function(event){
 		if(event.candidate){
-			rtcSendSignal({type: "candidate", candidate: event.candidate}, pc.uid)
+			rtcSendSignal({type: "candidate", candidate: event.candidate.candidate, label: event.candidate.sdpMLineIndex, id: event.candidate.sdpMid}, pc.uid)
 		}
 	}
 	pc.onaddstream = handleRemoteStreamAdded;
 	pc.onremovestream = handleRemoteStreamRemoved;
-
-	// Data channels
-	if(dataChannelsEnabled){
-		if (isInitiator) {
-			sendChannel = pc.createDataChannel("sendDataChannel", {reliable: false});
-			sendChannel.onmessage = handleMessage;
-
-			sendChannel.onopen = handleSendChannelStateChange;
-			sendChannel.onclose = handleSendChannelStateChange;
-		} else {
-			apprtc.pc[i].ondatachannel = gotReceiveChannel;
-		}
-	}
 }
 function rtcCall(pc){
 	pc.createOffer(function(sessionDescription){
@@ -114,7 +102,7 @@ function rtcCall(pc){
 		rtcSendSignal({type: "offer", sessionDescription: sessionDescription}, pc.uid);
 	}, function(error){
 		alert(error);
-	});
+	}, (apprtc.callVideo ? apprtc.sdpVideoConstraints : apprtc.sdpVoiceConstraints));
 }
 function rtcSetVideoMute(muted){
 	if(apprtc.localVideoPanel){
@@ -124,8 +112,6 @@ function rtcSetVideoMute(muted){
 			$("#" + apprtc.localVideoPanel).find("video").show();
 		}
 	}
-}
-function handleIceCandidate(event){
 }
 function handleRemoteStreamAdded(event){
 	var userItem = getUserItem(event.target.uid); // appcore
@@ -139,27 +125,17 @@ function handleRemoteStreamAdded(event){
 	}, 1000);
 }
 function handleRemoteStreamRemoved(event){
-	console.log("handleRemoteStreamRemoved");
-}
-function handleMessage(){
-	console.log("handleMessage");
-}
-function handleSendChannelStateChange(event){
-	console.log("handleSendChannelStateChange");
-}
-function gotReceiveChannel(){
-	console.log("gotReceiveChannel");
+	
 }
 function rtcProcessSignal(object, to, sender){
 	if(object.type == "candidate"){
 		setTimeout(function(){
 			try {
-				apprtc.pc[sender].addIceCandidate(new RTCIceCandidate(object.candidate));
-				console.log("successfully added candidate?");
+				apprtc.pc[sender].addIceCandidate(new RTCIceCandidate({candidate: object.candidate, sdpMLineIndex: object.label}));
 			} catch (error) {
 				console.log("Error adding candidate " + object.candidate.length, error);
 			}
-		}, 500);
+		}, 10);
 	} else if(object.type == "ready"){
 		if(apprtc.playerCount>0 || (!apprtc.callVideo && apprtc.mediaStream)){ // I am ready
 			if(!apprtc.pc[sender].playerID){
