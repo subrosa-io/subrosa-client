@@ -39,11 +39,7 @@ function startCallInput(group, type){
 		}
 	}, 50);
 	
-	appcall.callDurationInterval = setInterval(function(){
-		appcall.callDuration++;
-		var durationText = Math.floor(appcall.callDuration/60) + ":" + ((appcall.callDuration % 60).toString().length == 1 ? "0" + appcall.callDuration%60 : appcall.callDuration%60)
-		$("#callDuration").text(durationText);
-	}, 1000);
+	$("#callDuration").text("Connecting");
 }
 function callUserUpdate(event, uid, type){
 	if(event == 'JOIN'){
@@ -170,6 +166,10 @@ function stopMediaTest(){
 		appcall.mediaTestNode.disconnect(appcall.mediaTestAudioContext);
 }
 appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDisplay){
+	if(mediaStreamHasTracks(mediaStream))
+		remoteTrackAdded();
+	mediaStream.onaddtrack = remoteTrackAdded;
+	
 	var id = "panel" + Math.round(Math.random()*999999999);
 	$("body").append("<div id='" + id + "' class='videoPanel'><video></video><div class='videoPanelActions'><div class='videoName'>" + (me ? "You" : escapeText(userDisplay)) + "</div><div class='videoHangup'>End</div></div></div>");
 	var videoPanel = $("#" + id);
@@ -211,6 +211,10 @@ appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDi
 	return id;
 }
 appcall.createAudioPlayer = function createAudioPlayer(mediaStream, me, pc, userDisplay){
+	if(mediaStreamHasTracks(mediaStream))
+		remoteTrackAdded();
+	mediaStream.onaddtrack = remoteTrackAdded;
+	
 	var id = "player" + Math.round(Math.random()*999999999);
 	pc.playerID = id;
 	apprtc.playerCount++;
@@ -242,4 +246,15 @@ function attachMediaStream(element, stream) {
 	} else {
 	  console.log('Error attaching stream to element.');
 	}
+}
+function remoteTrackAdded(event){
+	appcall.callDurationInterval = setInterval(updateCallDuration, 1000);
+}
+function updateCallDuration(){
+	appcall.callDuration++;
+	var durationText = Math.floor(appcall.callDuration/60) + ":" + ((appcall.callDuration % 60).toString().length == 1 ? "0" + appcall.callDuration%60 : appcall.callDuration%60)
+	$("#callDuration").text(durationText);
+}
+function mediaStreamHasTracks(mediaStream){
+	return mediaStream.getAudioTracks().length || mediaStream.getVideoTracks().length;
 }
