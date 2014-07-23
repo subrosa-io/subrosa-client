@@ -425,7 +425,7 @@ function mainAppHooks(){
 	$("#myStatusSelect").change(function(){
 		api.emit("changeStatus", {status: $(this).val()});
 		var myListItem = $(".sidebarListItem[data-item='me']")
-		myListItem.find(".listItemIcon").attr("data-status", appcore.status);
+		myListItem.attr("data-status", appcore.status);
 		
 		myListItem.find(".listItemSubtitle").text(statusText[appcore.status]);
 		$("#editProfileIcon").popover($("#setStatusPopover"));
@@ -972,7 +972,7 @@ function parseChatMessage(input, userDisplay){
 }
 function loggedInCalls(){
 	var myListItem = $(".sidebarListItem[data-item='me']");
-	myListItem.find(".listItemIcon").attr("data-status", appcore.status);
+	myListItem.attr("data-status", appcore.status);
 	myListItem.find(".listItemSubtitle").text(statusText[appcore.status]);
 	$("#myStatusSelect").val(appcore.status);
 	$("#meUsername").text(appcore.username);
@@ -1324,7 +1324,7 @@ api.on("notify", function(data){
 			var icon = appcore.list[appcore.listHash["conv" + sortUID(data.uid, appcore.uid)]].avatar || "img/noavatar.png";
 			newNotification(icon, escapeText(data.displayname) + " is online", statusText[data.newStatus], 5000, true);
 		}
-		$(".sidebarListItem[data-item='conv" + sortUID(data.uid, appcore.uid) + "'] .listItemIcon").attr("data-status", data.newStatus == undefined ? '' : data.newStatus);
+		$(".sidebarListItem[data-item='conv" + sortUID(data.uid, appcore.uid) + "']").attr("data-status", data.newStatus == undefined ? '' : data.newStatus);
 	} else if(data.type == "displaynameChanged"){
 		if(data.uid){
 			setListItem("conv" + sortUID(data.uid, appcore.uid));

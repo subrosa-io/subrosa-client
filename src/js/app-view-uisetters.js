@@ -324,7 +324,7 @@ function createItemHTML(type, item){
 					subtitle = 'Contact request';
 				}
 			}
-			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv">' + pinnedIcon + '<div class="unreadBadge">0</div><img src="' + (item.avatar ? escapeText(item.avatar) : 'img/noavatar.png') + '" class="listItemIcon" data-status="' + (typeof item.status != 'undefined' ? item.status : "") + '" /><span class="listItemTitle">' + escapeText(item.displayname || item.username) + '</span> <br /><span class="listItemSubtitle">' + escapeText(subtitle)  + '</span></div>';
+			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv" data-status="' + (typeof item.status != 'undefined' ? item.status : "") + '">' + pinnedIcon + '<div class="unreadBadge">0</div><img src="' + (item.avatar ? escapeText(item.avatar) : 'img/noavatar.png') + '" class="listItemIcon" /><span class="listItemTitle">' + escapeText(item.displayname || item.username) + '</span> <br /><span class="listItemSubtitle">' + escapeText(subtitle)  + '</span></div>';
 		} else {
 			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv">' + pinnedIcon + '<div class="unreadBadge">0</div><img src="' + (item.avatar ? escapeText(item.avatar) : 'img/group.png') + '" class="listItemIcon" data-status="room" /><span class="listItemTitle">' + escapeText(item.name) + '</span> <br /><span class="listItemSubtitle">' + (item.active ? '<span class="inCallSubtitle">Group call</span>' : "Group chat") + '</span></div>';
 		}

@@ -203,33 +203,37 @@ a:hover {
 	margin-left: 4px;
 	border-radius: 3px;
 }
-.listItemIcon[data-status="0"],.listItemIcon[data-status="4"] {
+.sidebarListItem[data-status="0"] .listItemIcon,.listItemIcon[data-status="4"]  .listItemIcon {
 	border-left: 4px solid #CACACA;
 	margin-left: 0px;
 }
-.listItemIcon[data-status="1"] {
+.sidebarListItem[data-status="1"] .listItemIcon {
 	border-left: 4px solid #42CC28;
 	margin-left: 0px;
 }
-.listItemIcon[data-status="2"] {
+.sidebarListItem[data-status="2"] .listItemIcon {
 	border-left: 4px solid #DB6538;
 	margin-left: 0px;
 }
-.listItemIcon[data-status="3"] {
+.sidebarListItem[data-status="3"] .listItemIcon {
 	border-left: 4px solid #94E8F8;
 	margin-left: 0px;
 }
-.listItemIcon[data-status="room"] {
+.sidebarListItem[data-status="room"] .listItemIcon {
 	margin-left: 4px;
 }
-#mainScreen .listItemTitle {
+.sidebarListItem[data-status="0"] .listItemTitle, .sidebarListItem[data-status="4"] .listItemTitle {
+	color: #7C7C7C;
+}
+.sidebarListItem .listItemTitle {
 	margin-left: 5px;
 	font-weight: bold;
 	display: inline-block;
 	width: 1px; /* trick */
 	white-space: nowrap;
+	color: #333;
 }
-#mainScreen .listItemPinned {
+.sidebarListItem .listItemPinned {
 	position: relative;
 	left: -7px;
 	top: -8px;
@@ -239,7 +243,7 @@ a:hover {
 	font-size: 90%;
 	color: #696969;
 }
-#mainScreen .listItemSubtitle {
+.sidebarListItem .listItemSubtitle {
 	margin-left: 5px;
 	color: #777;
 	position: relative;
