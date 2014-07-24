@@ -65,6 +65,7 @@ function rtcUserQuit(uid){
 		} else {
 			appcall.removeAudioPlayer(apprtc.pc[uid].playerID);
 		}
+		delete apprtc.pc[uid];
 	}
 }
 function rtcStop(){
