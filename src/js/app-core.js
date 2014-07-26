@@ -1191,7 +1191,7 @@ api.on("setProp", function(data){
 	updateBlob(true, 'setProp');
 });
 api.on("logout", function(data){
-	appcore.reconnect = 0;
+	appcore.reconnect = -1;
 	appcore.sock.close();
 	appcore.sockbuffer = [];
 	appcore.list = [];
