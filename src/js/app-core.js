@@ -38,12 +38,12 @@ appcore.sockon = function(type, callback){
 };
 api.on("connect", function(){
 	if(!appcore.connected){
-		var server = "wss://subrosa.io";
+		var server = "wss://subrosa.io/server/";
 		if(document.location.hash == "#local")
-			server = ""; // connect to same hostname as page
-		appcore.sock = new eio(server);
+			server = "ws://" + document.location.hostname + "/server/"; // connect to same hostname as page
+		appcore.sock = new WebSocket(server);
 		
-		appcore.sock.on("open", function(){
+		appcore.sock.onopen = function(){
 			console.log("open");
 			appcore.connected = true;
 			clearInterval(appcore.reconnect);
@@ -53,24 +53,25 @@ api.on("connect", function(){
 			for(var i in appcore.sockbuffer){ appcore.sock.send(JSON.stringify(appcore.sockbuffer[i])); };
 			appcore.sockbuffer = [];
 			api.emit("connectionState", {state: "connected"});
-		});
-		appcore.sock.on("message", function(data){
-			if(data[0] == "{"){
-				if(appcore.map[data[0]]){
-					appcore.map[data[0]](data.substr(1));
+		}
+		appcore.sock.onmessage = function(event){
+			if(event.data[0] == "{"){
+				if(appcore.map[event.data[0]]){
+					appcore.map[event.data[0]](event.data.substr(1));
 				} else {
-					try{ data=JSON.parse(data) } catch(error){ return };
+					var data;
+					try{ data=JSON.parse(event.data) } catch(error){ return };
 					if(data.sockType){
 						if(appcore.map[data.sockType]){
 							appcore.map[data.sockType](data)
 						}
 					} else {
-						throw new Error("Unknown type" + data.sockType)
+						throw new Error("Unknown type " + data.sockType)
 					}
 				}
 			}
-		});
-		appcore.sock.on("close", function(e){
+		}
+		appcore.sock.onclose = function(e){
 			console.log("close");
 			appcore.connected = false;
 			if(appcore.reconnect==-1){
@@ -78,7 +79,7 @@ api.on("connect", function(){
 			}
 			closeEvents()
 			api.emit("connectionState", {state: "disconnected"});
-		});
+		}
 	}
 });
 api.emit("connect", {});
