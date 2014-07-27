@@ -1096,6 +1096,8 @@ function newNotification(icon, title, content, closeAfter, showWithFocus){
 		document.title = "(" + titleBadgeCount + ") Subrosa";
 		setFaviconBadge(titleBadgeCount);
 	}
+	if(typeof Notification == 'undefined')
+		return; // Notifications unsupported
 	
 	title = $("#htmlToText").html(title).text();
 	content = $("#htmlToText").html(content);
