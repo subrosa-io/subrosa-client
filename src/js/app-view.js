@@ -1317,10 +1317,6 @@ api.on("errorReporter", function(data){
 api.on("notify", function(data){
 	if(data.type == "statusChanged"){
 		if(data.newStatus != 0 && !data.oldStatus){
-			if(currentTab.indexOf("-") != -1){
-				if(currentTab.split("-")[0] == data.uid || currentTab.split("-")[1] == data.uid)
-					return;
-			}
 			var icon = appcore.list[appcore.listHash["conv" + sortUID(data.uid, appcore.uid)]].avatar || "img/noavatar.png";
 			newNotification(icon, escapeText(data.displayname) + " is online", statusText[data.newStatus], 5000, true);
 		}

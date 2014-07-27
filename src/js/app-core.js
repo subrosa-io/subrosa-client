@@ -1114,7 +1114,11 @@ api.on("sendComm", function(data){
 	appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: auxdata, inviteToRoom: inviteToRoom, clientTs: clientTs});
 });
 api.on("sendRawComm", function(data){
-	appcore.sockemit("raw", data);
+	if(appcore.connected){
+		appcore.sockemit("raw", data);
+	} else {
+		appcore.sockbuffer.push(data);
+	}
 });
 appcore.sockon("ack", function(data){
 	api.emit("notify", {type: "messageAck", clientTs: data.cTs, serverTs: data.sTs, target: data.target});
