@@ -21,7 +21,7 @@ appcore.sockemit = function(type, message){
 	}
 	if(type != "raw"){
 		message.sockType = type;
-		if(!appcore.connected){
+		if(!appcore.connected || appcore.sock.readyState != 1){
 			appcore.sockbuffer.push(message);
 		} else {
 			appcore.sock.send(JSON.stringify(message));
@@ -1113,11 +1113,12 @@ api.on("sendComm", function(data){
 	var clientTs = (data.clientTs ? data.clientTs : undefined);
 	appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: auxdata, inviteToRoom: inviteToRoom, clientTs: clientTs});
 });
-api.on("sendRawComm", function(data){
-	if(appcore.connected){
-		appcore.sockemit("raw", data);
-	} else {
+api.on("sendRawComm", function(data){i
+
+	if(!appcore.connected || appcore.sock.readyState != 1){
 		appcore.sockbuffer.push(data);
+	} else {
+		appcore.sockemit("raw", data);
 	}
 });
 appcore.sockon("ack", function(data){
@@ -1246,7 +1247,7 @@ window.onerror = function(errorMessage, url, line, column, stackTrace){
 		var message = errorMessage + "\n(Browser does not support stack traces)\n" + environmentDetails;
 	}
 	
-	api.emit("errorReporter", {trace: message});
+	api.emit("errorReporter", {trace: message + "\nHas patched send()"});
 	return false;
 }
 api.on("sendErrorReport", function(data){
