@@ -31,7 +31,10 @@ function startScreen(){
 	});
 	
 	if($("#loginUsername").val().length == 0 && localStorage && localStorage.getItem("lastUsername")){
-		$("#loginUsername").val(localStorage.getItem("lastUsername"));
+		try {
+			$("#loginUsername").val(localStorage.getItem("lastUsername"));
+		} catch (error){
+		}
 	}
 	$("#header").children().hide();
 	
@@ -306,7 +309,10 @@ function mainAppHooks(){
 	$("body").mouseup(function(){
 		if(dividerDragging == "mainLeftDivider"){
 			if(window.localStorage){
-				window.localStorage.setItem("sidebarWidth", sidebarWidth);
+				try {
+					window.localStorage.setItem("sidebarWidth", sidebarWidth);
+				} catch (error){
+				}
 			}
 		}
 		dividerDragging = "";
