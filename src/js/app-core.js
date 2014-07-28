@@ -56,19 +56,18 @@ api.on("connect", function(){
 		}
 		appcore.sock.onmessage = function(event){
 			if(event.data[0] == "{"){
-				if(appcore.map[event.data[0]]){
-					appcore.map[event.data[0]](event.data.substr(1));
-				} else {
-					var data;
-					try{ data=JSON.parse(event.data) } catch(error){ return };
-					if(data.sockType){
-						if(appcore.map[data.sockType]){
-							appcore.map[data.sockType](data)
-						}
-					} else {
-						throw new Error("Unknown type " + data.sockType)
+				var data;
+				try{ data=JSON.parse(event.data) } catch(error){ return };
+				if(data.sockType){
+					if(appcore.map[data.sockType]){
+						appcore.map[data.sockType](data)
 					}
+				} else {
+					throw new Error("Unknown type " + data.sockType)
 				}
+			} else {
+				if(appcore.map[event.data[0]])
+					appcore.map[event.data[0]](event.data.substr(1));
 			}
 		}
 		appcore.sock.onclose = function(e){
@@ -1113,7 +1112,7 @@ api.on("sendComm", function(data){
 	var clientTs = (data.clientTs ? data.clientTs : undefined);
 	appcore.sockemit("comm", {target: data.target, type: data.type, data: encrypted, auxdata: auxdata, inviteToRoom: inviteToRoom, clientTs: clientTs});
 });
-api.on("sendRawComm", function(data){i
+api.on("sendRawComm", function(data){
 
 	if(!appcore.connected || appcore.sock.readyState != 1){
 		appcore.sockbuffer.push(data);
