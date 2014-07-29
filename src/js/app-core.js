@@ -27,7 +27,11 @@ appcore.sockemit = function(type, message){
 			appcore.sock.send(JSON.stringify(message));
 		}
 	} else {
-		appcore.sock.send(message);
+		if(!appcore.connected || appcore.sock.readyState != 1){
+			appcore.sockbuffer.push(message);
+		} else {
+			appcore.sock.send(message);
+		}
 	}
 };
 appcore.sockon = function(type, callback){
@@ -1246,7 +1250,7 @@ window.onerror = function(errorMessage, url, line, column, stackTrace){
 		var message = errorMessage + "\n(Browser does not support stack traces)\n" + environmentDetails;
 	}
 	
-	api.emit("errorReporter", {trace: message + "\nHas patched send()"});
+	api.emit("errorReporter", {trace: message + "\nHas patched raw send()"});
 	return false;
 }
 api.on("sendErrorReport", function(data){
