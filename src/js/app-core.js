@@ -19,19 +19,25 @@ appcore.sockemit = function(type, message){
 	if(!appcore.sock){
 		throw new Error("No socket is defined.");
 	}
-	if(type != "raw"){
-		message.sockType = type;
-		if(!appcore.connected || appcore.sock.readyState != 1){
-			appcore.sockbuffer.push(message);
+	try {
+		if(type != "raw"){
+			message.sockType = type;
+			if(!appcore.connected || appcore.sock.readyState != 1){
+				appcore.sockbuffer.push(message);
+			} else {
+				appcore.sock.send(JSON.stringify(message));
+			}
 		} else {
-			appcore.sock.send(JSON.stringify(message));
+			if(!appcore.connected || appcore.sock.readyState != 1){
+				appcore.sockbuffer.push(message);
+			} else {
+				appcore.sock.send(message);
+			}
 		}
-	} else {
-		if(!appcore.connected || appcore.sock.readyState != 1){
-			appcore.sockbuffer.push(message);
-		} else {
-			appcore.sock.send(message);
-		}
+	} catch (error) {
+		console.log("Error while sending - reconnecting;", error);
+		appcore.sockbuffer.push(message);
+		appcore.sock.close();
 	}
 };
 appcore.sockon = function(type, callback){
@@ -1194,6 +1200,8 @@ api.on("getBuffer", function(data){
 	}
 });
 api.on("setProp", function(data){
+	if(!appcore.profileBlob.props)
+		return;
 	if(data.value == null){
 		delete appcore.profileBlob.props[data.name];
 	} else {
