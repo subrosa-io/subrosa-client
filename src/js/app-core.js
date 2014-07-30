@@ -1064,9 +1064,12 @@ function decryptComm(comm, target){
 		return {failedDecrypt: true, msg: "Failed to decrypt message."};
 	}
 	
-	var decryptedData = cipher.output;
-	if(decryptedData.data)
-		decryptedData = decryptedData.data;
+	var decryptedData;
+	try {
+		var decryptedData = forge.util.decodeUtf8(cipher.output.bytes()); // .getBytes() to empty buffer
+	} catch (error) {
+		var decryptedData = cipher.output.data;
+	}
 	var decryptedObject;
 	try {
 		decryptedObject = JSON.parse(decryptedData);
@@ -1104,7 +1107,7 @@ api.on("sendComm", function(data){
 	var cipher = forge.cipher.createCipher('AES-GCM', convKey); 
 	
 	cipher.start({iv: iv, tagLength: 128});
-	cipher.update(forge.util.createBuffer(JSON.stringify(data.message)));
+	cipher.update(forge.util.createBuffer(JSON.stringify(data.message)), 'utf8');
 	cipher.finish();
 	
 	var encrypted = cipher.output.data;
