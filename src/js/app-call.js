@@ -166,9 +166,11 @@ function stopMediaTest(){
 		appcall.mediaTestNode.disconnect(appcall.mediaTestAudioContext);
 }
 appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDisplay){
-	if(mediaStreamHasTracks(mediaStream))
-		remoteTrackAdded();
-	mediaStream.onaddtrack = remoteTrackAdded;
+	if(!me){
+		if(mediaStreamHasTracks(mediaStream))
+			remoteTrackAdded();
+		mediaStream.onaddtrack = remoteTrackAdded;
+	}
 	
 	var id = "panel" + Math.round(Math.random()*999999999);
 	$("body").append("<div id='" + id + "' class='videoPanel'><video></video><div class='videoPanelActions'><div class='videoName'>" + (me ? "You" : escapeText(userDisplay)) + "</div><div class='videoHangup'>End</div></div></div>");
@@ -180,7 +182,7 @@ appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDi
 	
 	apprtc.playerCount++;
 	// default position	
-	if(me){ // prevent audio loopback
+	if(me){
 		videoPanel.addClass("small");
 		if(apprtc.group){
 			videoPanel[0].style.left = (window.innerWidth-160-25) + "px";
@@ -206,14 +208,16 @@ appcall.createVideoPanel = function createVideoPanel(mediaStream, me, pc, userDi
 	attachMediaStream(videoPanel.find("video")[0], mediaStream);
 	videoPanel.find("video")[0].play();
 	if(me){
-		videoPanel.find("video")[0].muted = true;
+		videoPanel.find("video")[0].muted = true; // prevent audio loopback
 	}
 	return id;
 }
 appcall.createAudioPlayer = function createAudioPlayer(mediaStream, me, pc, userDisplay){
-	if(mediaStreamHasTracks(mediaStream))
-		remoteTrackAdded();
-	mediaStream.onaddtrack = remoteTrackAdded;
+	if(!me){
+		if(mediaStreamHasTracks(mediaStream))
+			remoteTrackAdded();
+		mediaStream.onaddtrack = remoteTrackAdded;
+	}
 	
 	var id = "player" + Math.round(Math.random()*999999999);
 	pc.playerID = id;
@@ -248,6 +252,7 @@ function attachMediaStream(element, stream) {
 	}
 }
 function remoteTrackAdded(event){
+	clearInterval(appcall.callDurationInterval);
 	appcall.callDurationInterval = setInterval(updateCallDuration, 1000);
 }
 function updateCallDuration(){

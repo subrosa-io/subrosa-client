@@ -7,6 +7,7 @@ apprtc.callVideo = null;
 apprtc.pc = [];
 apprtc.audioPlayers = [];
 apprtc.group = null;
+apprtc.signalBuffer = []; // used to store signals received when RTC isn't ready
 apprtc.pc_config = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}, {'url': 'turn:46.28.205.143:3478', 'credential': 'turnserver', username: 'subrosa'}]};
 apprtc.pc_constraints = {'optional': [{'DtlsSrtpKeyAgreement': true},{'RtpDataChannels': true}]};
 apprtc.sdpVoiceConstraints = {'mandatory': {'OfferToReceiveAudio':true}};
@@ -33,7 +34,9 @@ function rtcStart(mediaStream, group, video){
 	if(video){
 		apprtc.localVideoPanel = appcall.createVideoPanel(mediaStream, true, false, '');
 	}
+	
 	rtcSendSignal({type: "ready"}, null);
+	
 	var callUsers = appcore.list[appcore.listHash[appcore.activeCall]].active.callUsers;
 	if(!callUsers){ // private conv
 		callUsers = appcore.activeCall.substr(4).split("-");
@@ -49,6 +52,11 @@ function rtcStart(mediaStream, group, video){
 			alert("Error while sending mediaStream when I'm joining: " + error + " ; mediastream has " + apprtc.mediaStream.getAudioTracks().length + " audio tracks.");
 		}
 	}
+	
+	for(var i = 0; i < apprtc.signalBuffer.length; i++){
+		rtcProcessSignal(apprtc.signalBuffer[i].object, apprtc.signalBuffer[i].to, apprtc.signalBuffer[i].sender);
+	}
+	apprtc.signalBuffer = [];
 }
 function rtcUserJoin(uid){
 	createPeerConnection(uid);
@@ -98,7 +106,6 @@ function createPeerConnection(uid) {
 	pc.onremovestream = handleRemoteStreamRemoved;
 }
 function rtcCall(pc){
-	pc.sentOffer = true;
 	pc.createOffer(function(sessionDescription){
 		pc.setLocalDescription(sessionDescription);
 		rtcSendSignal({type: "offer", sessionDescription: sessionDescription}, pc.uid);
@@ -122,6 +129,9 @@ function handleRemoteStreamAdded(event){
 	} else {
 		appcall.createAudioPlayer(event.stream, false, event.target, userItem.displayname || userItem.username);
 	}
+	
+	rtcSendSignal({type: "readyStep2"}, event.target.uid); // event.target is apprtc.pc[]
+	
 	setTimeout(function(){
 		verifyFingerprint(event.target.uid, apprtc.pc[event.target.uid].remoteDescription.sdp, apprtc.pc[event.target.uid].localDescription.sdp);
 	}, 1000);
@@ -138,23 +148,21 @@ function rtcProcessSignal(object, to, sender){
 		}
 	} else if(object.type == "ready"){
 		if(apprtc.playerCount>0 || (!apprtc.callVideo && apprtc.mediaStream)){
-			if(!apprtc.pc[sender].sentOffer){
+			if(initiateFirst(sender)){
 				rtcCall(apprtc.pc[sender]);
-				rtcSendSignal({type: "ackReady"}, sender);
 			}
+		} else {
+			apprtc.signalBuffer.push({object: object, to: to, sender: sender});
 		}
-	} else if(object.type == "ackReady" && to == appcore.uid){
-		if(!apprtc.pc[sender].sentOffer){
-			rtcCall[apprtc.pc[sender]];
-		}
+	} else if(object.type == "readyStep2" && to == appcore.uid){
+		rtcCall[apprtc.pc[sender]];
 	} else if(object.type == "offer" && to == appcore.uid){
 		if(apprtc.pc[sender]){
-			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object.sessionDescription), function(){
-				apprtc.pc[sender].createAnswer(function(sessionDescription){
-					apprtc.pc[sender].setLocalDescription(sessionDescription);
-					rtcSendSignal({type: "answer", sessionDescription: sessionDescription}, sender)
-				}, function(){}, (apprtc.callVideo ? apprtc.sdpVideoConstraints : apprtc.sdpVoiceConstraints));
-			});
+			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object.sessionDescription));
+			apprtc.pc[sender].createAnswer(function(sessionDescription){
+				apprtc.pc[sender].setLocalDescription(sessionDescription);
+				rtcSendSignal({type: "answer", sessionDescription: sessionDescription}, sender)
+			}, function(){}, (apprtc.callVideo ? apprtc.sdpVideoConstraints : apprtc.sdpVoiceConstraints));
 		}
 	} else if(object.type == "answer" && to == appcore.uid){
 		if(apprtc.pc[sender]){
@@ -180,4 +188,7 @@ function verifyFingerprint(uid, remoteSdp, localSdp){
 		api.emit("dropCall", {target: appcore.activeCall});
 	}
 	api.emit("verifyFingerprint", {remoteFingerprint: remoteFingerprint, localFingerprint: localFingerprint, uid: uid});
+}
+function initiateFirst(otherParty){
+	return otherParty > appcore.uid;
 }
