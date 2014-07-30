@@ -3,8 +3,6 @@ body {
 }
 #app {
 	position: absolute;
-	top: 1px;
-	left: 1px;
 }
 .preloader {
 	position: absolute; top: 50%; left: 50%; height: 60px; width: 160px; margin-top: -30px; margin-left: -80px; background-color: #EEE; border: 1px solid #444; z-index: 10000; padding: 20px; text-align: center;
@@ -151,8 +149,10 @@ a:hover {
 	float: left;
 	height: 100%;
 	width: 255px;
-	margin-left: 10px;
-	margin-top: 10px;
+	padding-left: 10px;
+	padding-top: 10px;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 #mainSidebar.collapsed {
 	width: 73px;
@@ -329,6 +329,8 @@ a:hover {
 }
 #mainScreen .tab-home, #mainScreen .tab-meta, #mainScreen .tab-gedit {
 	padding: 15px;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 #mainLeftDivider {
 	height: 100%;
