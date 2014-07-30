@@ -149,11 +149,12 @@ function rtcProcessSignal(object, to, sender){
 		}
 	} else if(object.type == "offer" && to == appcore.uid){
 		if(apprtc.pc[sender]){
-			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object.sessionDescription));
-			apprtc.pc[sender].createAnswer(function(sessionDescription){
-				apprtc.pc[sender].setLocalDescription(sessionDescription);
-				rtcSendSignal({type: "answer", sessionDescription: sessionDescription}, sender)
-			}, function(){}, (apprtc.callVideo ? apprtc.sdpVideoConstraints : apprtc.sdpVoiceConstraints));
+			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object.sessionDescription), function(){
+				apprtc.pc[sender].createAnswer(function(sessionDescription){
+					apprtc.pc[sender].setLocalDescription(sessionDescription);
+					rtcSendSignal({type: "answer", sessionDescription: sessionDescription}, sender)
+				}, function(){}, (apprtc.callVideo ? apprtc.sdpVideoConstraints : apprtc.sdpVoiceConstraints));
+			});
 		}
 	} else if(object.type == "answer" && to == appcore.uid){
 		if(apprtc.pc[sender]){
