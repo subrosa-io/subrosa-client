@@ -14,7 +14,7 @@ var api = {
 		this.map[type].push(handler)
 	}
 };
-var appcore = {version: 0.28, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], currentUploadTarget:""};
+var appcore = {version: 0.29, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], currentUploadTarget:""};
 appcore.sockemit = function(type, message){
 	if(!appcore.sock){
 		throw new Error("No socket is defined.");
