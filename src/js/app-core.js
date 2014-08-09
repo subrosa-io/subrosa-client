@@ -58,10 +58,12 @@ api.on("connect", function(){
 			appcore.connected = true;
 			clearInterval(appcore.reconnect);
 			appcore.reconnect=-1;
-			if(appcore.derivedKey)
+			if(appcore.derivedKey){
 				appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: appcore.derivedKeyHash, resendBlob: false});
-			for(var i in appcore.sockbuffer){ appcore.sock.send(JSON.stringify(appcore.sockbuffer[i])); };
-			appcore.sockbuffer = [];
+				// resend sockbuffer when logged in
+			} else {
+				sendSockBuffer();
+			}
 			api.emit("connectionState", {state: "connected"});
 		}
 		appcore.sock.onmessage = function(event){
@@ -91,6 +93,18 @@ api.on("connect", function(){
 		}
 	}
 });
+function sendSockBuffer(){
+	for(var i = 0; i < appcore.sockbuffer.length; i++){
+		try {
+			appcore.sock.send(JSON.stringify(appcore.sockbuffer[i]));
+		} catch (error){
+			appcore.sockbuffer = appcore.sockbuffer.slice(i);
+			appcore.sock.close();
+			return;
+		}
+	}
+	appcore.sockbuffer = [];
+}
 api.emit("connect", {});
 api.on("userExists", function(data){
 	if(data.username){
@@ -254,6 +268,8 @@ appcore.sockon("getLists", function(data){
 			api.emit("generateKeyExchange", {id: appcore.list[i].id});
 	}
 	api.emit("getListsResult", {});
+	
+	sendSockBuffer();
 });
 appcore.sockon("newList", function(data){
 	if(data.autojoin && data.object.id.length == 37){
