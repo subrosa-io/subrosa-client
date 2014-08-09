@@ -449,7 +449,7 @@ a:hover {
 }
 .convMessage > .convMessageContent {
 	display: inline-block;
-	max-height: 64px;
+	max-height: 200px;
 	overflow: auto;
 }
 .convMessage > .convMessageContent.edited:after {
