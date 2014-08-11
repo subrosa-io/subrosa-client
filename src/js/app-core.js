@@ -83,7 +83,7 @@ api.on("connect", function(){
 			}
 		}
 		appcore.sock.onclose = function(e){
-			console.log("close");
+			console.log("close", e);
 			appcore.connected = false;
 			if(appcore.reconnect==-1){
 				appcore.reconnect=setInterval(function(){api.emit("connect");}, 1500)
