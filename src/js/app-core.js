@@ -51,6 +51,8 @@ api.on("connect", function(){
 		var server = "wss://subrosa.io/server/";
 		if(document.location.hash == "#local")
 			server = "ws://" + document.location.hostname + "/server/"; // connect to same hostname as page
+		if(appcore.sock)
+			appcore.sock.close();
 		appcore.sock = new WebSocket(server);
 		
 		appcore.sock.onopen = function(){
@@ -86,7 +88,8 @@ api.on("connect", function(){
 			console.log("close", e);
 			appcore.connected = false;
 			if(appcore.reconnect==-1){
-				appcore.reconnect=setInterval(function(){api.emit("connect");}, 1500)
+				api.emit("connect");
+				appcore.reconnect=setInterval(function(){api.emit("connect");}, 2000)
 			}
 			closeEvents()
 			api.emit("connectionState", {state: "disconnected"});
