@@ -773,7 +773,12 @@ function mainApp(){
 		
 		$(".loginPassword").val("");
 		// remember username
-		localStorage && localStorage.setItem("lastUsername", $("#loginUsername").val());
+		if(localStorage){
+			try {
+				localStorage.setItem("lastUsername", $("#loginUsername").val());
+			} catch(error){
+			}
+		}
 		
 		$("#startScreen").css("position", "absolute").fadeOut(300);
 		
@@ -1368,7 +1373,7 @@ api.on("notify", function(data){
 	} else if(data.type == "bundleRecieved"){
 		var lastScrollPos;
 		if(data.target == currentTab){
-			$("#convText").find("#bufferLoading").remove();
+			$("#convText").find("#bufferLoading,#bufferMore").remove();
 			if(data.more){
 				$("#convText").prepend("<a id='bufferMore' href='javascript:;'><span class='fa fa-clock-o'></span>Decrypt earlier history</a>");
 			} else {
