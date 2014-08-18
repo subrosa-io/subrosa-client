@@ -908,7 +908,7 @@ api.on("editText", function(data){
 	commHandler({type: 2, sender: appcore.uid, decrypted: {msg: data.newMessage, replaceTimestamp: data.replaceTimestamp}, target: data.target});
 });
 function escapeText(input){
-	return input.toString().replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+	return input.toString().replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 api.on("clearHistory", function(data){
 	appcore.sockemit("clearHistory", data);

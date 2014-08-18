@@ -968,17 +968,22 @@ api.on("replaceText", function(data){
 	}
 });
 function parseChatMessage(input, userDisplay){
-	var links = input.match(/(^|\s|<br>)https?:\/\/[A-Za-z0-9\-]+\.[A-za-z0-9\/?&%;.#=\-~+!]+/g);
+	var links = input.match(/(^|\s|\n)https?:\/\/[A-Za-z0-9\-]+\.[A-za-z0-9\/?&%;.#=\-~+!]+/g);
 	for(var i in links){
-		links[i] = links[i].trim().replace("<br>", "");
+		links[i] = links[i].trim().replace("\n", "");
 		input = input.replace(links[i], '<a href="' + links[i].replace(/&amp;/g, "&") + '" target="_blank">' + links[i] + '</a>');
 	}
-	if(input.substr(0, 4) == "/me "){
-		input = "<i>" + userDisplay + " " + input.substr(4) + "</i>";
+	var lines = input.split("\n");
+	for(var i = 0; i < lines.length; i++){
+		if(lines[i].substr(0,4) == "/me ")
+			lines[i] = "<i>" + userDisplay + " " + lines[i].substr(4) + "</i>";
 	}
+	input = lines.join("\n");
 	if(window.SubrosaEmoticons && window.SubrosaEmoticons.markUp && !getProp("disableEmoticons")){
 		input = window.SubrosaEmoticons.markUp(input);
 	}
+	
+	input = input.replace(/\n/g, "<br />");
 	return input;
 }
 function loggedInCalls(){
