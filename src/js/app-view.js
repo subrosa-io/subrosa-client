@@ -500,7 +500,7 @@ function mainAppHooks(){
 		$("#editProfileAvatar").fadeIn(500);
 	});
 	$("#editProfilePasswordSave").click(function(){
-		var errorMessages = $("#editProfilePassShort,#editProfilePassMismatch,#editProfilePassOldFail,#editProfileBgColor");
+		var errorMessages = $("#editProfilePassShort,#editProfilePassMismatch,#editProfilePassOldFail,#editProfileBgColor,#editProfilePassSuccess");
 		errorMessages.hide();
 		if($("#editProfileNewPass1").val().length < 10){
 			$("#editProfilePassShort").show().shake();
@@ -514,7 +514,7 @@ function mainAppHooks(){
 		$("#editProfileNewPass1,#editProfileNewPass2,#editProfileOldPass").val("");
 		
 		if(!errorMessages.is(":visible")){
-			$("#editProfileBack").click();
+			$("#editProfilePassSuccess").show();
 		}
 	});
 	$("#editProfileDisplayNameSave").click(function(){
