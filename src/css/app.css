@@ -128,9 +128,23 @@ a:hover {
 	color: #777;
 	font-size: 90%;
 }
-#createAccountFooterError, .loginErrorMessage, .errorMessage {
+.errorMessage {
 	color: red;
 	font-weight: bold;
+}
+#loginErrorMessage {
+	clear: both;
+	display: block;
+}
+#loginRemember {
+	float: right;
+}	
+#loginRememberLabel {
+	position: relative;
+	top: -2px;
+}
+#loginRememberPopover > .popoverContent {
+	max-width: 200px;
 }
 #signInSpinner {
 	margin-right: 7px;

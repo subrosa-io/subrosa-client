@@ -75,9 +75,12 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 							<input id="loginUsername" type="text" class="input-block input-large" placeholder="Subrosa name" /><br />
 							<input id="loginPassword" type="password" class="input-block input-large loginPassword" placeholder="Password" /><br />
 							<button id="loginButton" class="button input-block button-primary">Decrypt &amp; Login</button>
+							<div id="loginRemember"><input id="loginRememberCheckbox" type="checkbox"><label id="loginRememberLabel" for="loginRememberCheckbox"><small> Remember me</small></label></div>
+							
 							<span id="loginErrorMessage"></span>
 							</form>
 						</div>
+						
 						<div id="authRight">
 							<h2>No account?</h2>
 							<hr />
@@ -91,6 +94,16 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 						Subrosa v<span id="versionString"></span> <a href="https://subrosa.io/source" target="_blank">(open source)</a> - <span id="versionInfo">checking</span><br /><span id="httpWarning" class="hide"><i class="fa fa-warning"></i> <strong>Loaded insecurely</strong> <a href="https://subrosa.io/help/i-see-loaded-insecurely-what-does-it-mean" target="_blank">(learn more)</a></span>
 					</div>
 				</div>
+				
+				
+			<div id="loginRememberPopover" class="popover popoverRight" style="display: none">
+				<div class="popoverCaret caretRight"></div>
+				<div class="popoverContent">
+					<strong class="errorMessage">This saves your encryption key on the computer.</strong><br />
+					<small>Only do this if you trust the computer.</small>
+				</div>
+			</div>
+				
 				<div id="createAccountContent" style="display: none">
 					<div id="createAccountHeader">
 						<h2>Create An Account</h2>

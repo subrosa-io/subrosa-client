@@ -60,7 +60,7 @@ api.on("connect", function(){
 			appcore.connected = true;
 			clearInterval(appcore.reconnect);
 			appcore.reconnect=-1;
-			if(appcore.derivedKey){
+			if(appcore.username){
 				appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: appcore.derivedKeyHash, resendBlob: false});
 				// resend sockbuffer when logged in
 			} else {
@@ -199,6 +199,13 @@ api.on("loginMain", function(data){
 	appcore.username = data.username;
 	appcore.passwordTempHolder = data.password;
 });
+api.on("loginDerivedKey", function(data){
+	appcore.derivedKey = data.derivedKey;
+	appcore.derivedKeySalt = data.derivedKeySalt;
+	var derivedKeyHash = forge.sha256.create().update(data.derivedKey).digest().toHex();
+	appcore.derivedKeyHash = derivedKeyHash;
+	appcore.sockemit("loginMain", {step: 2, username: data.username, hash: derivedKeyHash});
+});
 appcore.sockon("loginMain", function(data){
 	if(data.step == 1){
 		if(data.salt){
@@ -211,6 +218,8 @@ appcore.sockon("loginMain", function(data){
 			appcore.derivedKeySalt = data.salt;
 			appcore.derivedKey = derivedKey;
 			appcore.derivedKeyHash = derivedKeyHash;
+			
+			api.emit("saveDerivedKey", {key: appcore.derivedKey, salt: appcore.derivedKeySalt}); // remember me
 			
 			appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: derivedKeyHash});
 		} else {

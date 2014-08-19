@@ -30,12 +30,22 @@ function startScreen(){
 			createAccountScreen();
 	});
 	
-	if($("#loginUsername").val().length == 0 && localStorage && localStorage.getItem("lastUsername")){
+	if($("#loginUsername").val().length == 0 && window.localStorage && localStorage.getItem("lastUsername")){
 		try {
 			$("#loginUsername").val(localStorage.getItem("lastUsername"));
 		} catch (error){
 		}
 	}
+	// 'Remember me' auto sign in
+	if(window.localStorage && window.localStorage.getItem("savedDerivedKey") && window.localStorage.getItem("savedDerivedKeySalt")){
+		api.emit("loginDerivedKey", {username: localStorage.getItem("lastUsername"), derivedKey: window.localStorage.getItem("savedDerivedKey"), derivedKeySalt: window.localStorage.getItem("savedDerivedKeySalt")});
+		
+		$("#loginButton").text("Logging in");
+		$("#loginButton").addClass("disabled");
+		$("#signInSpinner").show();
+		$("#loginRememberCheckbox").prop("checked", true);
+	}
+	
 	$("#header").children().hide();
 	
 	if(document.location.protocol == "http:" && document.location.hostname != "localhost" && document.location.hostname != "127.0.0.1"){
@@ -223,15 +233,38 @@ function createAccountHooks(){
 		api.emit("loginMain", {username: $("#loginUsername").val(), password: $("#loginPassword").val()});
 	});
 	
+	$("#loginRemember").mouseenter(function(){
+		$("#loginRememberLabel").popover($("#loginRememberPopover"));
+	});
+	$("#loginRemember").mouseleave(function(){
+		$("#loginRememberLabel").popover($("#loginRememberPopover"));
+	});
+	
 	api.on("loginMainResult", function(data){
 		$("#loginButton").text("Decrypt & Login");
 		$("#loginButton").removeClass("disabled");
 		$("#signInSpinner").hide();
 		if(data.status == "FAIL"){
 			$("#loginErrorMessage").text(data.message);
+			
+			localStorage.removeItem("savedDerivedKey"); // clear 'remember me'
+			localStorage.removeItem("savedDerivedKeySalt")
 		} else if(data.status == "OK"){
 			loggedInCalls();
 			mainApp();
+		}
+	});
+	
+	api.on("saveDerivedKey", function(data){
+		if($("#loginRememberCheckbox").is(":checked")){
+			if(window.localStorage && window.localStorage.setItem){
+				try {
+					localStorage.setItem("savedDerivedKey", data.key);
+					localStorage.setItem("savedDerivedKeySalt", data.salt);
+				} catch (error) {
+					alert("Sorry, but your browser doesn't support localStorage. You can't use 'Remember me'.");
+				}
+			}
 		}
 	});
 }
@@ -678,6 +711,10 @@ function mainAppHooks(){
 		}
 	});
 	$("#logoutBtn").click(function(){
+		if(window.localStorage && window.localStorage.removeItem){
+			localStorage.removeItem("savedDerivedKey"); // clear 'remember me'
+			localStorage.removeItem("savedDerivedKeySalt")
+		}
 		api.emit("logout", {});
 		$(".sidebarListItem").each(function(){
 			var dataItem = $(this).attr("data-item");
@@ -767,11 +804,11 @@ function mainAppHooks(){
 var lastTab = "";
 var currentTab = "";
 function mainApp(){
-		$(".loginButton").text("Decrypt & Login");
-		$(".loginButton").removeClass("disabled");
-		$(".signInSpinner").hide();
+		$("#loginButton").text("Decrypt & Login");
+		$("#loginButton").removeClass("disabled");
+		$("#signInSpinner").hide();
 		
-		$(".loginPassword").val("");
+		$("#loginPassword").val("");
 		// remember username
 		if(localStorage){
 			try {
