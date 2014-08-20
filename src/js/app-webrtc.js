@@ -8,8 +8,8 @@ apprtc.pc = [];
 apprtc.audioPlayers = [];
 apprtc.group = null;
 apprtc.signalBuffer = []; // used to store signals received when RTC isn't ready
-apprtc.pc_config = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}, {'url': 'turn:46.28.205.143:3478', 'credential': 'turnserver', username: 'subrosa'}]};
-apprtc.pc_constraints = {'optional': [{'DtlsSrtpKeyAgreement': true},{'RtpDataChannels': true}]};
+apprtc.pc_config = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}, {'url': 'turn:185.45.193.218:3478', 'credential': 'turnserver', username: 'subrosa'}]};
+apprtc.pc_constraints = {'optional': []};
 apprtc.sdpVoiceConstraints = {'mandatory': {'OfferToReceiveAudio':true}};
 apprtc.sdpVideoConstraints = {'mandatory': {'OfferToReceiveAudio':true,'OfferToReceiveVideo':true }};
 
