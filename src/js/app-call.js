@@ -67,7 +67,6 @@ function stopCallInput(type){
 function setMicrophoneMute(muted){
 	appcall.micMute = muted;
 	if(appcall.mediaStream){
-		console.log(appcall.mediaStream.getAudioTracks().length);
 		appcall.mediaStream.getAudioTracks()[0].enabled = !muted;
 	}
 }

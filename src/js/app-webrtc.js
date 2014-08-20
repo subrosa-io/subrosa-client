@@ -184,8 +184,10 @@ function verifyFingerprint(uid, remoteSdp, localSdp){
 		localFingerprint = localFingerprint[0];
 		console.log("Local fingerprint for " + uid + ": " + localFingerprint);
 	} else {
-		// Multiple fingerprints obtained
-		api.emit("dropCall", {target: appcore.activeCall});
+		// Unexpected number of fingerprints obtained
+		alert("Dropping call due to unexpected WebRTC fingerprints.");
+		console.log(remoteFingerprint.length, localFingerprint.length, remoteSdp, localSdp);
+		return api.emit("dropCall", {target: appcore.activeCall});
 	}
 	api.emit("verifyFingerprint", {remoteFingerprint: remoteFingerprint, localFingerprint: localFingerprint, uid: uid});
 }
