@@ -1038,7 +1038,11 @@ function loggedInCalls(){
 	$("#header").children().not("#settingsPopover").show();
 	
 	if(apprtc.supported){
-		$("#infoSupportCalls").show();
+		if(getBrowserName() == "Firefox" && getBrowserVersion() < 31){
+			$("#infoOutdatedSupportCalls").show();
+		} else {
+			$("#infoSupportCalls").show();
+		}
 	} else {
 		$("#infoNotSupportCalls").show();
 	}
