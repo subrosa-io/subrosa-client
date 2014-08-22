@@ -1046,6 +1046,9 @@ function loggedInCalls(){
 	} else {
 		$("#infoNotSupportCalls").show();
 	}
+	if(document.location.hostname == "subrosa.io"){
+		$("#infoHostedWarning").show();
+	}
 	if(getProp("generalVolume") !== false)
 		$("#generalVolumeSlider").val(getProp("generalVolume")*100);
 	if(getProp("ringingVolume") !== false)

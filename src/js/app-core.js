@@ -1107,7 +1107,7 @@ function decryptComm(comm, target){
 	var decryptedObject;
 	try {
 		decryptedObject = JSON.parse(decryptedData);
-		// verify timestamp
+		// verify timestamp (counter replay attacks)
 		var fullTimestamp = 1400000000000 + decryptedObject.t * (60 * 60 * 1000);
 		if(Math.abs(fullTimestamp - comm.time) < 25 * 60 * 60 * 1000){
 			// timestamp OK (generous 25 - 26 hour grace period)
