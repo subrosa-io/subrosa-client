@@ -800,6 +800,14 @@ function mainAppHooks(){
 		$("#convEmoticon").popover($("#convEmoticonPopover"));
 		$("#convInput").focus().moveCaretToEnd();
 	});
+	// Focus #convInput if user types without focusing. 
+	$(document).keypress(function(event){
+		if(document.activeElement.tagName == "BODY" && currentTab.substr(0,4) == "conv"){
+			if((event.keyCode >= 49 && event.keyCode <= 57) || (event.keyCode >= 65 && event.keyCoe <= 97) || (event.keyCode >= 90 && event.keyCode <= 122)){
+				$("#convInput").focus();
+			}
+		}
+	});
 }
 var lastTab = "";
 var currentTab = "";
