@@ -800,10 +800,10 @@ function mainAppHooks(){
 		$("#convEmoticon").popover($("#convEmoticonPopover"));
 		$("#convInput").focus().moveCaretToEnd();
 	});
-	// Focus #convInput if user types without focusing. 
-	$(document).keypress(function(event){
+	// Automatically focus #convInput if user types without focusing. 
+	$(document).keydown(function(event){
 		if(document.activeElement.tagName == "BODY" && currentTab.substr(0,4) == "conv"){
-			if((event.keyCode >= 49 && event.keyCode <= 57) || (event.keyCode >= 65 && event.keyCoe <= 97) || (event.keyCode >= 90 && event.keyCode <= 122)){
+			if((event.which >= 49 && event.which <= 57) || (event.which >= 65 && event.which <= 97) || (event.which >= 90 && event.which <= 122)){
 				$("#convInput").focus();
 			}
 		}

@@ -244,7 +244,7 @@ function stopTitleAlert(){
 // Prevent the backspace key from navigating back.
 $(document).bind('keydown', function (event) {
     var doPrevent = false;
-    if (event.keyCode === 8) {
+    if (event.which === 8) {
         var d = event.srcElement || event.target;
         if ((d.tagName.toUpperCase() === 'INPUT' && 
              (
