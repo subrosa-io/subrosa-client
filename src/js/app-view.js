@@ -313,7 +313,7 @@ function mainAppHooks(){
 		api.emit("changeProfile", {bgColor: $(this).attr("data-bgColor")});
 		$("#editProfileBack").click();
 	});
-	$("#mainSidebar").on("click", ".sidebarListItem", function(){
+	$("#mainSidebar").on("mousedown", ".sidebarListItem", function(){
 		var itemName = $(this).attr("data-item");
 		if(itemName == "searchElement"){
 			if(!$(this).attr("data-searchElementAdd") || $(this).attr("data-searchElementAdd") == "invalid"){
