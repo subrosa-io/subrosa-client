@@ -21,6 +21,7 @@
 		}
 		
 		msg = ' ' + msg;
+		msg = msg.replace(/\n/g, "\n "); // catch shortcuts at start of a linnewe
 		
 		for(var shortcut in shortcutMap){
 			while(msg.indexOf(' ' + shortcut) !== -1){
@@ -29,7 +30,7 @@
 			}
 		}
 
-		return msg.trim();
+		return msg.replace(/\n /g, "\n").trim();
 	};
 	
 	this.generatePicker = function($div, $insertInput) {
