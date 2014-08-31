@@ -234,10 +234,10 @@ function createAccountHooks(){
 	});
 	
 	$("#loginRemember").mouseenter(function(){
-		$("#loginRememberLabel").popover($("#loginRememberPopover"));
+		$("#loginRemember").popover($("#loginRememberPopover"));
 	});
 	$("#loginRemember").mouseleave(function(){
-		$("#loginRememberLabel").popover($("#loginRememberPopover"));
+		$("#loginRemember").popover($("#loginRememberPopover"));
 	});
 	
 	api.on("loginMainResult", function(data){
@@ -300,7 +300,7 @@ function mainAppHooks(){
 		}
 	});
 	$(".sidebarListItem[data-item='me']").click(function(){
-		$(this).popover($("#setStatusPopover"));
+		$("#editProfileIcon").popover($("#editProfilePopover"));
 	});
 	// generate background color picks
 	var allowedBgColors = ["EDFBFF", "EDECFC", "F2E8FF", "F3DAFF", "FCE1F9", "FFECEF", "FFF5E8", "FFF9E8", "FEFFE8", "E8FDE5", "E9FFD2", "FCFDFC"];
@@ -467,7 +467,7 @@ function mainAppHooks(){
 		myListItem.attr("data-status", appcore.status);
 		
 		myListItem.find(".listItemSubtitle").text(statusText[appcore.status]);
-		$("#editProfileIcon").popover($("#setStatusPopover"));
+		$("#editProfileIcon").popover($("#editProfilePopover"));
 	});
 	$("#editProfileDisplayNameLink").click(function(){
 		$("#editProfileHeader").fadeOut(500);
@@ -828,9 +828,9 @@ function mainApp(){
 		$("#startScreen").css("position", "absolute").fadeOut(300);
 		
 		if(!hasNotificationPerm){ // check if we have permissions missing
-			$("#permissionScreen").css("position", "relative").fadeIn(300);
+			$("#permissionScreen").css("position", "static").fadeIn(300);
 		} else {
-			$("#mainScreen").css("position", "relative").fadeIn(300);
+			$("#mainScreen").css("position", "static").fadeIn(300);
 			changeTabTo("home");
 		}
 		layScreen();

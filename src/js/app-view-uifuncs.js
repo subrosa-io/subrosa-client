@@ -26,25 +26,25 @@ jQuery.fn.popover = function(obj){
 		if(triggerElement.is(":hidden"))
 			return;
 		if(popover.hasClass("popoverBottom")){
-			var top = triggerElement.offset().top - triggerElement.outerHeight() - popover.outerHeight() - 32;
+			var top = triggerElement.offset().top - triggerElement.outerHeight()/2 - popover.outerHeight();
 		} else if(popover.hasClass("popoverRight") || popover.hasClass("popoverLeft")){
-			var top = triggerElement.position().top - popover.outerHeight()/2 + triggerElement.outerHeight()/2;
+			var top = triggerElement.offset().top - popover.outerHeight()/2 + triggerElement.outerHeight()/2;
 		} else {
-			var top = triggerElement.position().top + 8 + triggerElement.outerHeight();
+			var top = triggerElement.offset().top + triggerElement.outerHeight() + 8;
 		}
-		
 		if(popover.hasClass("popoverRight")){
 			var left = triggerElement.offset().left + triggerElement.outerWidth() + 8;
 		} else {
 			var left = triggerElement.offset().left + (triggerElement.width()/2) - (popover.outerWidth()/2);
 		}
+		
 		var leftCorrection = 0;
 		var topCorrection = 0;
 		if($(window).width()-left-popover.outerWidth() < 20){
 			leftCorrection = 20 - ($(window).width()-left-popover.outerWidth());
 		}
-		if(top < 10){
-			topCorrection -= -10 - top;
+		if(top < 20){
+			topCorrection -= 20 - top;
 		}
 		left -= leftCorrection;
 		top -= topCorrection;
@@ -60,7 +60,7 @@ jQuery.fn.popover = function(obj){
 			popover.find(".popoverCaret").css("top", caretTop-top);
 		}
 		if(!popover.hasClass("popoverRight")){
-			var caretLeft = triggerElement.offset().left + (triggerElement.width()/2) - left;
+			var caretLeft = triggerElement.offset().left + (triggerElement.width()/2) - left - 8;
 			popover.find(".popoverCaret").css("left", caretLeft);
 		}
 	}
