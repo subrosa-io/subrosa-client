@@ -804,7 +804,9 @@ function mainAppHooks(){
 	$(document).keydown(function(event){
 		if(document.activeElement.tagName == "BODY" && currentTab.substr(0,4) == "conv"){
 			if((event.which >= 49 && event.which <= 57) || (event.which >= 65 && event.which <= 97) || (event.which >= 90 && event.which <= 122)){
-				$("#convInput").focus();
+				if(!event.ctrlKey && !event.altKey){
+					$("#convInput").focus();
+				}
 			}
 		}
 	});
