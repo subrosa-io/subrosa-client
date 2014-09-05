@@ -14,6 +14,10 @@
 			letters[pass[i]] = (letters[pass[i]] || 0) + 1;
 			score += 5.0 / letters[pass[i]];
 		}
+		// bonus points for very long length (max: 30)
+		if(pass.length > 17){
+			score += Math.min((pass.length-17) * 2, 30);
+		}
 		// bonus points for mixing it up
 		var variations = {
 			digits: /\d/.test(pass),
@@ -26,12 +30,12 @@
 		for (var check in variations) {
 			variationCount += (variations[check] == true) ? 1 : 0;
 		}
-		score += (variationCount - 1) * 10;
+		score += (variationCount - 1) * 7;
 
 		return parseInt(score);
 	}
 	
-	var commonPhrases = ["123", "456", "789", "987", "654", "321", "Pass", "pass", "word", "000", "qwe", "rty", "asd", "fgh", "zxc", "vbn", "abc", "subrosa", "Subrosa"];
+	var commonPhrases = ["123", "456", "789", "987", "654", "321", "Pass", "p4ss", "pass", "word", "w0rd", "000", "qwe", "rty", "asd", "fgh", "zxc", "vbn", "abc", "subrosa", "Subrosa"];
 	this.ignoreCommonPhrases = function(password){
 		for(var i = 0; i < commonPhrases.length; i++){
 			password = password.replace(commonPhrases[i], "");
@@ -41,7 +45,7 @@
 	
 	this.checkStrength = function(pass){
 		var score = this.scorePassword(pass);
-		if(score < 45){
+		if(score < 50){
 			return "Too weak"; 
 		} else if(score < 75){
 			return "Good";
