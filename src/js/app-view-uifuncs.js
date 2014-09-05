@@ -72,8 +72,6 @@ jQuery.fn.popover = function(obj){
 				lastTrigger.removeClass("active");
 			keepPos = null;
 			$("body").unbind("mousedown.dismissPopover");
-		} else {
-			if(keepPos) keepPos();
 		}
 	});
 	

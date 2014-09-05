@@ -86,6 +86,19 @@ a:hover {
 #createAccountFooter {
 	padding-top: 15px;
 }
+#createAccountStep2Strength {
+	margin-left: 4px;
+	font-weight: bold;
+}
+.passwordStrength[data-strength="Too weak"] {
+	color: #F53232;
+}
+.passwordStrength[data-strength="Good"] {
+	color: #71CC54;
+}
+.passwordStrength[data-strength="Strong"] {
+	color: #1EAD40;
+}
 #createAccountStep3Gen {
 	width: 478px;
 	height: 175px;

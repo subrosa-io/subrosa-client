@@ -103,25 +103,28 @@ function createAccountHooks(){
 	});
 	
 	$("#createAccountStep2Pass1").keyup(function(){
-		if($("#createAccountStep2Pass1").val().length>=10){
-			$("#createAccountStep2Length").text("OK");
+		var strength = PasswordStrength.checkStrength($("#createAccountStep2Pass1").val());
+		$("#createAccountStep2Strength").text(strength);
+		$("#createAccountStep2Strength").attr("data-strength", strength);
+		
+		if($("#createAccountStep2Pass2").val().length){
+			if($("#createAccountStep2Pass1").val() == $("#createAccountStep2Pass2").val()){
+				$("#createAccountStep2Match").text("OK");
+			} else {
+				$("#createAccountStep2Match").text("Doesn't match.");
+			}
 		} else {
-			$("#createAccountStep2Length").text("At least 10 chars");
-		}
-		if($("#createAccountStep2Pass1").val() == $("#createAccountStep2Pass2").val()){
-			$("#createAccountStep2Match").text("OK");
-		} else {
-			$("#createAccountStep2Match").text("Doesn't match.");
+			$("#createAccountStep2Match").text("");
 		}
 	});
 	
 	$("#createAccountStep2Pass2").keyup(function(){
 		if($("#createAccountStep2Pass1").val() == $("#createAccountStep2Pass2").val()){
-			$("#createAccountStep2Match").text("OK");
+			$("#createAccountStep2Match").text("Matches");
 		} else {
 			$("#createAccountStep2Match").text("Doesn't match.");
 		}
-		if($("#createAccountStep2Match").text() == "OK" && $("#createAccountStep2Length").text() == "OK"){
+		if($("#createAccountStep2Match").text() == "Matches" && ($("#createAccountStep2Strength").attr("data-strength") == "Good" || $("#createAccountStep2Strength").attr("data-strength") == "Strong")){
 			$("#createAccountStep2Btn").removeClass("disabled");
 		}
 	});
@@ -499,11 +502,17 @@ function mainAppHooks(){
 		$("#editProfileMain").hide();
 		$("#editProfileAvatar").fadeIn(500);
 	});
+	$("#editProfileNewPass1").keyup(function(){
+		var strength = PasswordStrength.checkStrength($("#editProfileNewPass1").val());
+		$("#editProfilePassStrength").text(strength);
+		$("#editProfilePassStrength").attr("data-strength", strength);
+	});
 	$("#editProfilePasswordSave").click(function(){
-		var errorMessages = $("#editProfilePassShort,#editProfilePassMismatch,#editProfilePassOldFail,#editProfileBgColor,#editProfilePassSuccess");
+		var errorMessages = $("#editProfilePassStrength,#editProfilePassMismatch,#editProfilePassOldFail,#editProfileBgColor,#editProfilePassSuccess");
 		errorMessages.hide();
-		if($("#editProfileNewPass1").val().length < 10){
-			$("#editProfilePassShort").show().shake();
+		
+		if($("#editProfilePassStrength").attr("data-strength") == "Too weak" || $("#editProfileNewPass1").val().length == 0){
+			$("#editProfilePassWeak").show().shake();
 			return;
 		}
 		if($("#editProfileNewPass1").val() != $("#editProfileNewPass2").val()){

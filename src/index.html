@@ -110,10 +110,10 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 					</div>
 					<div id="createAccountStep2" style="display: none">
 						<form>
-						<p>Think of a new password, one you never used before. Minimum 10 characters long.</b></p>
-						<input type="password" class="input-large" id="createAccountStep2Pass1" placeholder="Password" /> <span id="createAccountStep2Length"></span><br />
+						<p>Think of a new, strong password. Don't use the same password on multiple sites.</b></p>
+						<input type="password" class="input-large" id="createAccountStep2Pass1" placeholder="Password" /> <span id="createAccountStep2Strength" class="passwordStrength"></span><br />
 						<input type="password" class="input-large" id="createAccountStep2Pass2" placeholder="Confirm password" /> <span id="createAccountStep2Match"></span>
-						<p><b>Write down your password somewhere safe</b> - it is never sent to Subrosa servers, and we can't recover it.</p>
+						<p><b>Write down your password somewhere safe</b> - it is never sent to Subrosa servers, and hence it cannot be reset.</p>
 						<button class="button disabled" id="createAccountStep2Btn">Next</button>
 						</form>
 					</div>
@@ -205,11 +205,11 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 							<div id="editProfilePassword" style="display: none">
 								<span>Change password</span><br /><br />
 								<input type="password" id="editProfileOldPass" placeholder="Old password"><br />
-								<input type="password" id="editProfileNewPass1" placeholder="New password"><br />
+								<input type="password" id="editProfileNewPass1" placeholder="New password"> <span id="editProfilePassStrength" class="passwordStrength"></span> <br />
 								<input type="password" id="editProfileNewPass2" placeholder="Repeat password"><br />
-								<small id="editProfilePassSuccess" class="hide">Password updated.</small><small id="editProfilePassShort" class="errorMessage hide">Must be at least 10 characters long</small><small id="editProfilePassMismatch" class="errorMessage hide">New passwords don't match</small><small id="editProfilePassOldFail" class="errorMessage hide">Old password is incorrect.</small><br />
+								<small id="editProfilePassSuccess" class="hide">Password updated.</small><small id="editProfilePassWeak" class="errorMessage hide">New password is too weak.</small><small id="editProfilePassMismatch" class="errorMessage hide">New passwords don't match</small><small id="editProfilePassOldFail" class="errorMessage hide">Old password is incorrect.</small><br />
 								<button id="editProfilePasswordSave">Change</button><br /><br />
-								<small>Passwords must be at least 10 characters.<br />Don't use the same password as another site.</small>
+								<small>Don't use the same password on multiple sites.</small>
 							</div>
 							<div id="editProfileAvatar" style="display: none">
 								<strong>Upload new avatar</strong><br />
@@ -516,6 +516,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 	<script src="js/app-call.js"></script>
 	<script src="js/app-core.js"></script>
 	<script src="js/app-emoticons.js"></script>
+	<script src="js/app-passwordstrength.js"></script>
 	<script src="js/app-view-uifuncs.js"></script>
 	<script src="js/app-view-uisetters.js"></script>
 	<script src="js/app-view.js"></script>
