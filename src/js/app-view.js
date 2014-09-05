@@ -151,8 +151,8 @@ function createAccountHooks(){
 		}
 	});
 	
-	$("#createAccountStep4Captcha,#createAccountStep4Email").keyup(function(){
-		if($("#createAccountStep2Pass1").val().length > 5 && $("#createAccountStep4Email").val().length > 5){
+	$("#createAccountStep4Captcha").keyup(function(){
+		if($("#createAccountStep2Pass1").val().length > 5){
 			$("#createAccountStep4Btn").removeClass("disabled");
 		}
 	});
