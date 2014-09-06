@@ -37,8 +37,8 @@ function startScreen(){
 		}
 	}
 	// 'Remember me' auto sign in
-	if(window.localStorage && window.localStorage.getItem("savedDerivedKey") && window.localStorage.getItem("savedDerivedKeySalt")){
-		api.emit("loginDerivedKey", {username: localStorage.getItem("lastUsername"), derivedKey: window.localStorage.getItem("savedDerivedKey"), derivedKeySalt: window.localStorage.getItem("savedDerivedKeySalt")});
+	if(window.localStorage && window.localStorage.getItem("savedDerivedKey") && window.localStorage.getItem("savedDerivedKeySalt") && window.localStorage.getItem("savedDerivedKeyKdf")){
+		api.emit("loginDerivedKey", {username: localStorage.getItem("lastUsername"), derivedKey: window.localStorage.getItem("savedDerivedKey"), derivedKeySalt: window.localStorage.getItem("savedDerivedKeySalt"), derivedKeyKdf: window.localStorage.getItem("savedDerivedKeyKdf")});
 		
 		$("#loginButton").text("Logging in");
 		$("#loginButton").addClass("disabled");
@@ -163,13 +163,14 @@ function createAccountHooks(){
 			api.emit("register", {username: $("#createAccountStep1Username").val(), displayname: $("#createAccountStep1Displayname").val(), password: $("#createAccountStep2Pass1").val(), email: $("#createAccountStep4Email").val(), newsletter: $("#createAccountStep4Newsletter").is(":checked"), challenge: lastCaptchaChallenge,captcha: $("input#createAccountStep4Captcha").val()});
 			
 			$("#createAccountStep4Btn").hide();
-			$("#createAccountStep4Text").html("<img src='/img/spinner.gif' class='spinneralign'> Registering..");
+			$("#createAccountStep4Registering").show();
 		}
 	});
 	api.on("registerResult", function(data){
 		if(data.status == "FAIL"){
 			$("input#createAccountStep4Captcha").val("");
 			$("#createAccountFooterError").text(data.message);
+			$("#createAccountStep4Registering").hide();
 			
 			$("#createAccountStep4Text").text("");
 			setTimeout(function(){$("#createAccountStep4Btn").show()}, 300);
@@ -252,6 +253,7 @@ function createAccountHooks(){
 			
 			localStorage.removeItem("savedDerivedKey"); // clear 'remember me'
 			localStorage.removeItem("savedDerivedKeySalt")
+			localStorage.removeItem("savedDerivedKeyKdf")
 		} else if(data.status == "OK"){
 			loggedInCalls();
 			mainApp();
@@ -264,6 +266,7 @@ function createAccountHooks(){
 				try {
 					localStorage.setItem("savedDerivedKey", data.key);
 					localStorage.setItem("savedDerivedKeySalt", data.salt);
+					localStorage.setItem("savedDerivedKeyKdf", data.kdf);
 				} catch (error) {
 					alert("Sorry, but your browser doesn't support localStorage. You can't use 'Remember me'.");
 				}
@@ -508,8 +511,9 @@ function mainAppHooks(){
 		$("#editProfilePassStrength").attr("data-strength", strength);
 	});
 	$("#editProfilePasswordSave").click(function(){
-		var errorMessages = $("#editProfilePassStrength,#editProfilePassMismatch,#editProfilePassOldFail,#editProfileBgColor,#editProfilePassSuccess");
+		var errorMessages = $("#editProfilePassMismatch,#editProfilePassOldFail,#editProfileBgColor,#editProfilePassSuccess");
 		errorMessages.hide();
+		$("#editProfilePassStrength").text("").attr("data-strength", "");
 		
 		if($("#editProfilePassStrength").attr("data-strength") == "Too weak" || $("#editProfileNewPass1").val().length == 0){
 			$("#editProfilePassWeak").show().shake();
@@ -1024,7 +1028,7 @@ api.on("replaceText", function(data){
 	}
 });
 function parseChatMessage(input, userDisplay){
-	var links = input.match(/(^|\s|\n)https?:\/\/[A-Za-z0-9\-]+\.[A-za-z0-9\/?&%;.#=\-~+!]+/g);
+	var links = input.match(/(^|\s|\n)https?:\/\/[A-Za-z0-9\-]+\.[A-za-z0-9\/?&%;.#=\-~+!:]+/g);
 	for(var i in links){
 		links[i] = links[i].trim().replace("\n", "");
 		input = input.replace(links[i], '<a href="' + links[i].replace(/&amp;/g, "&") + '" target="_blank">' + links[i] + '</a>');

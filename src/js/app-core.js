@@ -14,7 +14,8 @@ var api = {
 		this.map[type].push(handler)
 	}
 };
-var appcore = {version: 0.30, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], currentUploadTarget:""};
+var appcore = {version: 0.30, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeyKdf:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampIgnore: [], bufferTimestampReplace: [], userList: [], noListBuffer: [], currentUploadTarget:""};
+
 appcore.sockemit = function(type, message){
 	if(!appcore.sock){
 		throw new Error("No socket is defined.");
@@ -140,48 +141,38 @@ api.on("getCaptcha", function(data){
 	appcore.sockemit("getCaptcha", {purpose: data.purpose});
 });
 api.on("genKey", function(data){
-	var rsa = forge.pki.rsa;
-	var state = rsa.createKeyPairGenerationState(2048, 0x65537);
-	var step = function() {
-		if(!rsa.stepKeyPairGenerationState(state, 100)) {
-			data.generating();
-			setTimeout(step, 1);
-		} else {
-			// continue
-			appcore.generatedRSAKey = state.keys;
-			data.generated();
-		}
-	};
-	setTimeout(step);
+	SubrosaCrypto.generateRSAKeypair(data.generating, function(keypair){
+		appcore.generatedRSAKey = keypair;
+		data.generated();
+	});
 });
 api.on("register", function(data){
 	var profileBlob = {};
 	// Convert the private key to PEM format, build into profile blob
-	// Use PBKDF2 to derive a 256 bit key from the user password (SHA256, 10000 iterations)
+	// Use Scrypt to derive a 256 bit key from the user password 
 	// Encrypt the profile blob with the derived key
-	// Hash the derived key with SHA256 (verified by the server when attempting to login, block offline brute force
+	// Hash the derived key with SHA256 (verified by the server when attempting to login, block offline brute force)
 	// Send the base64 encoded encrypted profile blob, along with the IV & salt & hashed derived key
 	// Clean up variables.
-	profileBlob.privateKey = forge.pki.privateKeyToPem(appcore.generatedRSAKey.privateKey);
+	profileBlob.privateKey = appcore.generatedRSAKey.privateKeyPem;
 	profileBlob.conversations = {};
 	
-	var publicKey = forge.pki.publicKeyToPem(appcore.generatedRSAKey.publicKey);
+	var publicKey = appcore.generatedRSAKey.publicKeyPem;
 	
 	var profileBlobJson = JSON.stringify(profileBlob);
-	var pbdkf2Salt = forge.random.getBytesSync(32);
-	var derivedKey = forge.pbkdf2(data.password, pbdkf2Salt, 10000, 32);
-	var derivedKeyHash = forge.sha256.create().update(derivedKey).digest().toHex();
+	
+	var derivedKeyObj = SubrosaCrypto.createDerivedKey(data.password);
 	
 	var iv = forge.random.getBytesSync(16);
-	var cipher = forge.cipher.createCipher('AES-CBC', derivedKey);
+	var cipher = forge.cipher.createCipher('AES-CBC', derivedKeyObj.derivedKey);
 	cipher.start({iv: iv});
 	cipher.update(forge.util.createBuffer(profileBlobJson));
 	cipher.finish();
-	var cipherOutput = btoa(cipher.output.data); //better transport via JSON object over websockets
+	var cipherOutput = btoa(cipher.output.data); 
 	
-	var encryptedBlob = {iv: iv, pbdkf2Salt: pbdkf2Salt, data: cipherOutput};
+	var encryptedBlob = {iv: iv, kdf: derivedKeyObj.kdf, salt: derivedKeyObj.salt, data: cipherOutput};
 	
-	appcore.sockemit("register", {encryptedBlob: encryptedBlob, publicKey: publicKey, username: data.username, displayname: data.displayname, email: data.email, newsletter: data.newsletter, challenge: data.challenge, captcha: data.captcha, derivedKeyHash: derivedKeyHash});
+	appcore.sockemit("register", {encryptedBlob: encryptedBlob, publicKey: publicKey, username: data.username, displayname: data.displayname, email: data.email, newsletter: data.newsletter, challenge: data.challenge, captcha: data.captcha, derivedKeyHash: derivedKeyObj.derivedKeyHash});
 });
 appcore.sockon("register", function(data){
 	if(data.status == "OK"){
@@ -191,7 +182,7 @@ appcore.sockon("register", function(data){
 	api.emit("registerResult", data);
 });
 api.on("loginMain", function(data){
-	// get PBKDF2 salt from server, derive key
+	// get KDF salt from server, derive key with Scrypt (or PBKDF2 for legacy users)
 	// hash derived key and send it to the server
 	// if the server verifies it, we get back the encrypted profileBlob along with the IV so we can decrypt
 	api.emit("connect", {});
@@ -200,8 +191,9 @@ api.on("loginMain", function(data){
 	appcore.passwordTempHolder = data.password;
 });
 api.on("loginDerivedKey", function(data){
-	appcore.derivedKey = data.derivedKey;
+	appcore.derivedKeyKdf = data.derivedKeyKdf;
 	appcore.derivedKeySalt = data.derivedKeySalt;
+	appcore.derivedKey = data.derivedKey;
 	var derivedKeyHash = forge.sha256.create().update(data.derivedKey).digest().toHex();
 	appcore.derivedKeyHash = derivedKeyHash;
 	appcore.sockemit("loginMain", {step: 2, username: data.username, hash: derivedKeyHash});
@@ -210,18 +202,17 @@ appcore.sockon("loginMain", function(data){
 	if(data.step == 1){
 		if(data.salt){
 			var password = appcore.passwordTempHolder;
-			appcore.passwordTempHolder = "";
 			
-			var derivedKey = forge.pbkdf2(password, data.salt, 10000, 32);
-			var derivedKeyHash = forge.sha256.create().update(derivedKey).digest().toHex();
+			var derivedKeyObj = SubrosaCrypto.getDerivedKey(password, data.salt, data.kdf);
 			
-			appcore.derivedKeySalt = data.salt;
-			appcore.derivedKey = derivedKey;
-			appcore.derivedKeyHash = derivedKeyHash;
+			appcore.derivedKeyKdf = derivedKeyObj.kdf;
+			appcore.derivedKeySalt = derivedKeyObj.salt;
+			appcore.derivedKey = derivedKeyObj.derivedKey;
+			appcore.derivedKeyHash = derivedKeyObj.derivedKeyHash;
 			
-			api.emit("saveDerivedKey", {key: appcore.derivedKey, salt: appcore.derivedKeySalt}); // remember me
+			api.emit("saveDerivedKey", {key: appcore.derivedKey, salt: appcore.derivedKeySalt, kdf: appcore.derivedKeyKdf}); // remember me
 			
-			appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: derivedKeyHash});
+			appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: appcore.derivedKeyHash});
 		} else {
 			api.emit("loginMainResult", data);
 		}
@@ -257,6 +248,12 @@ appcore.sockon("loginMain", function(data){
 				
 				api.emit("getHome");
 			}
+			// Upgrade key derivation function if needed
+			if(appcore.derivedKeyKdf != "sc1"){
+				console.log("Upgrading key derivation function to Scrypt");
+				api.emit("changeProfile", {newpass: appcore.passwordTempHolder, oldpass: appcore.passwordTempHolder});
+			}
+			appcore.passwordTempHolder = "";
 		} else {
 			api.emit("loginMainResult", data);
 		}
@@ -348,23 +345,27 @@ api.on("changeProfile", function(data){
 		appcore.displayname = data.displayname.substr(0, 30);
 	}
 	if(data.oldpass && data.newpass){
-		var derivedKey = forge.pbkdf2(data.oldpass, appcore.derivedKeySalt, 10000, 32);
-		var derivedKeyHash = forge.sha256.create().update(derivedKey).digest().toHex();
-		if(derivedKeyHash != appcore.derivedKeyHash){
+		var currentDerivedKeyObj = SubrosaCrypto.getDerivedKey(data.oldpass, appcore.derivedKeySalt, appcore.derivedKeyKdf);
+		if(currentDerivedKeyObj.derivedKeyHash != appcore.derivedKeyHash){
 			api.emit("notify", {type: "changePassOldWrong"});
 			return;
 		}
 		
 		data.oldDerivedKeyHash = appcore.derivedKeyHash;
-		appcore.derivedKeySalt = forge.random.getBytesSync(32);
-		appcore.derivedKey = forge.pbkdf2(data.newpass, appcore.derivedKeySalt, 10000, 32);
-		appcore.derivedKeyHash = forge.sha256.create().update(appcore.derivedKey).digest().toHex();
+		
+		var newDerivedKeyObj = SubrosaCrypto.createDerivedKey(data.newpass);
+		
+		appcore.derivedKeyKdf = newDerivedKeyObj.kdf;
+		appcore.derivedKeySalt = newDerivedKeyObj.salt;
+		appcore.derivedKey = newDerivedKeyObj.derivedKey;
+		appcore.derivedKeyHash = newDerivedKeyObj.derivedKeyHash;
 		
 		updateBlob(true, 'changeProfile');
 		data.oldpass = "";
 		data.newpass = "";
 		data.derivedKeyHash = appcore.derivedKeyHash;
 		data.derivedKeySalt = appcore.derivedKeySalt;
+		data.derivedKeyKdf = appcore.derivedKeyKdf;
 	}
 	if(data.bgColor)
 		appcore.bgColor = data.bgColor;
@@ -1251,6 +1252,7 @@ api.on("logout", function(data){
 	appcore.derivedKeyHash = "";
 	appcore.derivedKey = "";
 	appcore.derivedKeySalt = "";
+	appcore.derivedKeyKdf = "";
 	appcore.displayname = "";
 	appcore.pubKey = "";
 	appcore.uid = "";

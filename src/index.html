@@ -130,7 +130,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 						<p>Type the following numbers:</p>
 						<div id="createAccountStep4CaptchaImg">Loading..</div>
 						<input type="text" id="createAccountStep4Captcha" />
-						<br /><br /><button class="button disabled" id="createAccountStep4Btn">Finish</button><span id="createAccountStep4Text"></span>
+						<br /><br /><button class="button disabled" id="createAccountStep4Btn">Finish</button><span id="createAccountStep4Registering" style="display: none"><img src='img/spinner.gif'> Registering..</span><span id="createAccountStep4Text"></span>
 						</form>
 					</div>
 					<div id="createAccountStep5" style="display: none">
@@ -509,11 +509,13 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 	<!-- build:js(src) vendor.min.js -->
 	<script src="vendor/engineio.js"></script>
 	<script src="vendor/forge.js"></script>
+	<script src="vendor/scrypt.js"></script>
 	<script src="vendor/jquery.js"></script>
 	<!-- endbuild -->
 	
 	<!-- build:js(src) app.min.js -->
 	<script src="js/app-call.js"></script>
+	<script src="js/app-core-subrosacrypto.js"></script>
 	<script src="js/app-core.js"></script>
 	<script src="js/app-emoticons.js"></script>
 	<script src="js/app-passwordstrength.js"></script>
