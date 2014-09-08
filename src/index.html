@@ -48,7 +48,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 			<div id="settingsPopover" class="popover popoverDown" style="display: none">
 				<div class="popoverCaret caretDown"></div>
 				<div class="popoverContent">
-					<div class="menuHeader"><strong><span id="settingsHeader"><span class="fa fa-cogs"></span> Settings</strong></span><span id="settingsBack" class="pointer" style="display: none"><span class="fa fa-arrow-up"></span> Back</span></div><hr />
+					<div class="menuHeader"><strong><span id="settingsHeader"><span class="fa fa-cogs"></span> Settings</span></strong><span id="settingsBack" class="pointer" style="display: none"><span class="fa fa-arrow-up"></span> Back</span></div><hr />
 					<span>General Volume</span><br />
 					<input id="generalVolumeSlider" type="range" min="0" max="100" step="1" value="70" /><br />
 					<span>Ringer Volume</span><br />
@@ -110,7 +110,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 					</div>
 					<div id="createAccountStep2" style="display: none">
 						<form>
-						<p>Think of a new, strong password. Don't use the same password on multiple sites.</b></p>
+						<p>Think of a new, strong password. Don't use the same password on multiple sites.</p>
 						<input type="password" class="input-large" id="createAccountStep2Pass1" placeholder="Password" /> <span id="createAccountStep2Strength" class="passwordStrength"></span><br />
 						<input type="password" class="input-large" id="createAccountStep2Pass2" placeholder="Confirm password" /> <span id="createAccountStep2Match"></span>
 						<p><b>Write down your password somewhere safe</b> - it is never sent to Subrosa servers, and hence it cannot be reset.</p>
@@ -134,7 +134,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 						</form>
 					</div>
 					<div id="createAccountStep5" style="display: none">
-						<p><h2>Hi <span id="createAccountStep5Name"></span>, welcome to Subrosa.</h2></p>	
+						<h2>Hi <span id="createAccountStep5Name"></span>, welcome to Subrosa.</h2>
 						<p><strong>A few tips:</strong>
 						<ul><li>Your username is <strong><span id="createAccountStep5Username"></span></strong>. Give people this username to find you.</li>
 						<li>Your password isn't sent to Subrosa's servers. It's not possible for us to recover it, so write it down on paper.</li>
@@ -182,7 +182,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 					<div id="editProfilePopover" class="popover popoverRight" style="display: none">
 					<div class="popoverCaret caretRight"></div>
 						<div class="popoverContent">
-							<div class="menuHeader"><strong><span id="editProfileHeader"><span class="fa fa-pencil"></span> Edit Profile</strong></span><span id="editProfileBack" class="pointer" style="display: none"><span class="fa fa-arrow-left"></span> Back</span></div><hr />
+							<div class="menuHeader"><strong><span id="editProfileHeader"><span class="fa fa-pencil"></span> Edit Profile</span></strong><span id="editProfileBack" class="pointer" style="display: none"><span class="fa fa-arrow-left"></span> Back</span></div><hr />
 							<div id="editProfileMain">
 								<select id="myStatusSelect"><option value="1">Online</option><option value="2">Busy</option><option value="3">Away</option><option value="4">Invisible</option></select><br /><br />
 								<span>Username</span><br />
@@ -362,7 +362,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 										<div id="encPopoverEncrypted">
 											<strong><span class="fa fa-lock"></span> Encrypted</strong><br />
 											<span>Your communication is <a id="securityInfoTrigger">end to end encrypted</a> with AES.</span><br /><br />
-											<span>Key: <span id="encKey"></span>
+											<span>Key: <span id="encKey"></span></span>
 										</div>
 										<div id="encPopoverReady">
 											<strong><span class="fa fa-circle-o"></span> Ready</strong><br />
@@ -526,7 +526,7 @@ A copy of the license is available at <http://www.gnu.org/licenses/>.
 	<!-- endbuild -->
 	
 	<!-- Sound -->
-	<audio src="sound/newMessage.ogg" id="soundNewMessage" preload="auto"></audio>
-	<audio src="sound/ringing.ogg" id="soundRinging" preload="auto"></audio>
+	<!--<audio src="sound/newMessage.ogg" id="soundNewMessage" preload="auto"></audio>
+	<audio src="sound/ringing.ogg" id="soundRinging" preload="auto"></audio>-->
 </body>
 </html>
