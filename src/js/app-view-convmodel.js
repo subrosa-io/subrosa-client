@@ -4,13 +4,15 @@
 	
 	this.createModel = function(conv){
 		if(!this.model[conv]){
-			this.model[conv] = {messages: [], bufferState: "loading"};
+			this.model[conv] = {messages: [], messagesStore: [], knownTimestamps: [], bufferState: "loading"};
 		}
 	}
 	this.clearModel = function(conv){
 		if(!this.model[conv])
 			throw new Error("Undefined conv " + conv);
 		this.model[conv].messages = [];
+		this.model[conv].messagesStore = [];
+		this.model[conv].knownTimestamps = [];
 	}
 	this.deleteModel = function(conv){
 		if(!this.model[conv])
@@ -18,33 +20,20 @@
 		delete this.model[conv];
 	}
 	this.addMessage = function(conv, message){
-		if(!this.model[conv]){
-			//this.createModel(conv); deprecated
+		// Always adds message to the bottom
+		if(!this.model[conv])
 			throw new Error("Undefined conv " + conv);
-		}
 		
 		var returnObj = {ignored: false, regenModel: false};
 		// Fields added by the model
 		message.edited = false; 
 		
-		var ignore = false;
-		// Do not add duplicate messages
-		this.model[conv].messages.forEach(function(existingMessage){
-			if(existingMessage.timestamp == message.timestamp){
-				returnObj.ignored = true;
-				return;
-			}
-		});
-		if(returnObj.ignored)
+		if(this.model[conv].knownTimestamps[message.timestamp]){
+			returnObj.ignored = true;
 			return returnObj;
-		
-		var lastMessage = this.model[conv].messages.length == 0 ? false : this.model[conv].messages[this.model[conv].messages.length-1];
-		// Add to correct position in messages[]
-		if(this.model[conv].messages.length == 0 || lastMessage.timestamp <= message.timestamp){
-			this.model[conv].messages.push(message);
-		} else {
-			this.model[conv].messages.unshift(message);
 		}
+		this.model[conv].knownTimestamps[message.timestamp] = true;
+		this.model[conv].messages.push(message);
 		
 		// Limit max elements rendered
 		if(this.model[conv].messages.length > 270){
@@ -69,7 +58,6 @@
 			
 		return false;
 	}
-	
 	this.ackMessage = function(conv, clientTs, serverTs){
 		if(!this.model[conv])
 			throw new Error("Undefined conv " + conv);
@@ -114,6 +102,7 @@
 		var addedReadMarker = false;
 		
 		for(var i = 0; i < this.model[conv].messages.length; i++){
+			console.log("Unread: " + this.model[conv].messages[i].unread + " for " + i);
 			if(!addedReadMarker && this.model[conv].messages[i].unread){
 				addedReadMarker = true;
 				if(i != 0)
@@ -193,4 +182,23 @@
 		this.model[conv].bufferState = bufferState;
 	}
 	
+	this.storeMessages = function(conv){
+		/* When a buffer is loaded, the new messages would have to be added from the top.
+		   This empties out the content of the model's messages, so the buffer messgges can be
+		   added normally.
+		*/
+		if(!this.model[conv])
+			throw new Error("Undefined conv " + conv);
+			
+		this.model[conv].messagesStore = this.model[conv].messages.slice(); //clone
+		this.model[conv].messages = [];
+	}
+	this.restoreMessages = function(conv){
+		// Merges the stored messages after the current model's messages
+		if(!this.model[conv])
+			throw new Error("Undefined conv " + conv);
+			
+		this.model[conv].messages.concat(this.model[conv].messagesStore);
+		this.model[conv].messagesStore = [];
+	}
 }).call(window.ConvModel = {});

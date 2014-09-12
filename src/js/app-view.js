@@ -940,8 +940,10 @@ function newText(data){
 			badge.slideDown(500).text(parseInt(badge.text())+1);
 		}
 	}
-	if(data.unread && !data.isFromBuffer && !data.isMe){
-		api.emit("notify", {type: "newMessage", uid: data.user, target: data.target, displayname: data.userShow, message: data.message});
+	if(data.unread && !data.isMe && !data.small){
+		if(!data.isFromBuffer || data.timestamp > new Date().getTime() - 30 * 1000){
+			api.emit("notify", {type: "newMessage", uid: data.user, target: data.target, displayname: data.userShow, message: data.message});
+		}
 	}
 }
 api.on("replaceText", function(data){
@@ -1145,10 +1147,11 @@ function convButtonClick(event){
 	} else if($(this).attr("id") == "moreButton"){
 		$(this).popover($(".convMorePopover"));
 	} else if($(this).attr("id") == "removeFromList" || $(this).attr("id") == "removeFromListRoom"){
-		ConvModel.deleteModel(currentTab);
-		api.emit("removeList", {id: currentTab});
+		var idToRemove = currentTab;
+		api.emit("removeList", {id: idToRemove});
 		$("#moreButton").popover($(".convMorePopover"));
-		removeList(currentTab);
+		removeList(idToRemove);
+		ConvModel.deleteModel(idToRemove);
 	} else if($(this).attr("id") == "removeFromContacts"){
 		api.emit("removeContact", {id: currentTab});
 		layContent(true, false);
@@ -1355,9 +1358,12 @@ api.on("notify", function(data){
 		$("#convText .convMessage[data-timestamp='" + data.clientTs + "']").attr("data-timestamp", data.serverTs);
 	} else if(data.type == "changePassOldWrong"){
 		$("#editProfilePassOldFail").show().shake();
-	} else if(data.type == "bundleRecieved"){
+	} else if(data.type == "beginBundle"){
+		ConvModel.storeMessages(data.target);
+	} else if(data.type == "endBundle"){
 		var lastScrollPos;
 		
+		ConvModel.restoreMessages(data.target);
 		ConvModel.markBufferState(data.target, (data.more ? "more" : "empty"));
 		if(data.target == currentTab){
 			lastScrollPos = $("#convText")[0].scrollHeight - $("#convText")[0].scrollTop;
