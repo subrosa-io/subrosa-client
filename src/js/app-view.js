@@ -9,7 +9,23 @@ var statusText = ["Offline", "Online", "Busy", "Away", "Invisible"];
 var hasFocus = true;
 var titleBadgeCount = 0;
 var openNotifications = [];
-$(window).focus(function(){ hasFocus = true; for(var i in openNotifications){ if(openNotifications[i].cancel){ openNotifications[i].cancel() } else { openNotifications[i].close() } }; openNotifications = []; titleBadgeCount=0; document.title = "Subrosa"; setFaviconBadge(0); focusInput()});
+$(window).focus(function(){
+	hasFocus = true;
+	for(var i in openNotifications){
+		if(openNotifications[i].cancel){
+			openNotifications[i].cancel()
+		} else {
+			openNotifications[i].close()
+		}
+	}
+	openNotifications = [];
+	document.title = "Subrosa";
+	if(titleBadgeCount != 0){
+		titleBadgeCount=0;
+		setFaviconBadge(0);
+	}
+	focusInput()
+});
 $(window).blur(function(){ hasFocus = false; });
 
 // Collect mouse movements to seed RNG
