@@ -894,7 +894,6 @@ api.on("sendText", function(data){
 	clearTimeout(listItem.stoppedTypingTimeout);
 	if((listItem.keyExchange && listItem.keyExchange != "pending") || appcore.profileBlob.conversations[data.target]){
 		var currentTime = new Date().getTime();
-		listItem.lastRead = currentTime;
 		api.emit("sendComm", {target: data.target, type: 2, message: {msg: data.message}, clientTs: currentTime});
 		commHandler({type: 2, sender: appcore.uid, decrypted: {msg: data.message}, target: data.target, time: currentTime});
 	}
@@ -1151,6 +1150,8 @@ api.on("sendRawComm", function(data){
 	}
 });
 appcore.sockon("ack", function(data){
+	var listItem = appcore.list[appcore.listHash[data.target]];
+	listItem.lastRead = data.sTs;
 	api.emit("notify", {type: "messageAck", clientTs: data.cTs, serverTs: data.sTs, target: data.target});
 });
 appcore.sockon("getPubKey", function(data){
