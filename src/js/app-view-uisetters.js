@@ -228,7 +228,7 @@ function layContent(header, body){
 			curTab.find("#convText")[0].scrollTop = curTab.find("#convText")[0].scrollHeight;
 		}
 		layScreen();
-		$(".sidebarListItem[data-item='" + listItem.id + "'] .listItemIcon").attr("data-status", (typeof listItem.status != "undefined" ? listItem.status : ""));
+		$(".sidebarListItem[data-item='" + listItem.id + "']").attr("data-status", (typeof listItem.status != "undefined" ? listItem.status : ""));
 	}
 	document.getElementsByTagName("body")[0].style['display'] = 'block';
 }
