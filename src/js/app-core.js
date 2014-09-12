@@ -299,7 +299,7 @@ appcore.sockon("newList", function(data){
 	appcore.listHash[data.object.id] = appcore.list.length-1; 
 	if(appcore.noListBuffer[data.object.id]){ // stores comms addressed to lists we didn't yet have
 		for(var i in appcore.noListBuffer[data.object.id]){
-			commHandler(appcore.noListBuffer[data.object.id][i]);
+			//commHandler(appcore.noListBuffer[data.object.id][i]); (deprecated)
 		}
 		delete appcore.noListBuffer[data.object.id];
 	}
@@ -323,7 +323,6 @@ api.on("removeList", function(data){
 		appcore.list.splice(appcore.listHash[data.id], 1);
 		var minusOneAfter = appcore.listHash[data.id];
 		delete appcore.listHash[data.id];
-		delete convBodyHolders[data.id];
 		for(var i in appcore.listHash){
 			if(appcore.listHash[i] > minusOneAfter){
 				appcore.listHash[i]--;

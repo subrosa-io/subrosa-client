@@ -1145,6 +1145,7 @@ function convButtonClick(event){
 	} else if($(this).attr("id") == "moreButton"){
 		$(this).popover($(".convMorePopover"));
 	} else if($(this).attr("id") == "removeFromList" || $(this).attr("id") == "removeFromListRoom"){
+		ConvModel.deleteModel(currentTab);
 		api.emit("removeList", {id: currentTab});
 		$("#moreButton").popover($(".convMorePopover"));
 		removeList(currentTab);

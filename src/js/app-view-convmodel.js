@@ -12,9 +12,15 @@
 			throw new Error("Undefined conv " + conv);
 		this.model[conv].messages = [];
 	}
+	this.deleteModel = function(conv){
+		if(!this.model[conv])
+			throw new Error("Undefined conv " + conv);
+		delete this.model[conv];
+	}
 	this.addMessage = function(conv, message){
 		if(!this.model[conv]){
-			this.createModel(conv);
+			//this.createModel(conv); deprecated
+			throw new Error("Undefined conv " + conv);
 		}
 		
 		var returnObj = {ignored: false, regenModel: false};
