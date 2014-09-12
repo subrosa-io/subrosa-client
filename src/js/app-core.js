@@ -268,15 +268,17 @@ api.on("getHome", function(){
 appcore.sockon("getLists", function(data){
 	// loading existing lists
 	appcore.list = data.list;
-	for(var i in appcore.list){
+	for(var i = 0; i < appcore.list.length; i++){
 		appcore.listHash[appcore.list[i].id] = i;
 		if(appcore.list[i].active && appcore.list[i].id.length == 20){
 			api.emit("callUpdate", {state: "CALLING", oldState: "", target: appcore.list[i].id, callType: appcore.list[i].active.type});
 		}
 		if(!appcore.profileBlob.conversations[appcore.list[i].id])
 			api.emit("generateKeyExchange", {id: appcore.list[i].id});
+		
+		api.emit("newList", {id: appcore.list[i].id});
 	}
-	api.emit("getListsResult", {});
+	api.emit("listUpdated", {});
 	
 	sendSockBuffer();
 });
@@ -294,18 +296,19 @@ appcore.sockon("newList", function(data){
 		api.emit("callUpdate", {state: "CALLING", oldState: "", target: data.object.id, callType: data.object.type});
 	}
 	
-	appcore.listHash[data.object.id] = appcore.list.length-1; // stores comms addressed to lists we didn't have
-	if(appcore.noListBuffer[data.object.id]){
+	appcore.listHash[data.object.id] = appcore.list.length-1; 
+	if(appcore.noListBuffer[data.object.id]){ // stores comms addressed to lists we didn't yet have
 		for(var i in appcore.noListBuffer[data.object.id]){
 			commHandler(appcore.noListBuffer[data.object.id][i]);
 		}
 		delete appcore.noListBuffer[data.object.id];
 	}
 	
+	api.emit("newList", {id: data.object.id});
+	api.emit("listUpdated", {});
+	
 	if(!appcore.profileBlob.conversations[data.object.id])
 		api.emit("generateKeyExchange", {id: data.object.id});
-	
-	api.emit("getListsResult", {});
 });
 api.on("addList", function(data){
 	if(data.id){
@@ -421,7 +424,9 @@ api.on("keyExchange", function(data){
 	}
 	if(!appcore.profileBlob.conversations[listItem.id]){
 		appcore.sockemit("comm", {type: 1, target: listItem.id, data: listItem.keyExchange.encrypted, auxdata: listItem.keyExchange.signature});
-		commHandler({type: 1, target: listItem.id, data: listItem.keyExchange.encrypted, auxdata: listItem.keyExchange.signature});
+		// The local keyExchange comm needs to have a timestamp before any messages that triggered it.
+		// Hack this by making it one second earlier.
+		commHandler({type: 1, target: listItem.id, data: listItem.keyExchange.encrypted, auxdata: listItem.keyExchange.signature, time: new Date().getTime() - 1000});
 		appcore.profileBlob.conversations[listItem.id] = listItem.keyExchange.convKey;
 		updateBlob(true, 'keyExchange');
 	}
@@ -516,10 +521,10 @@ function commHandler(comm, target, isFromBuffer){
 		if(comm.pubKey){
 			listItem.pubKey = comm.pubKey; // In all cases comm.pubKey is pubkey of other party.
 		}
-		api.emit("newText", {user: "*", userShow: "*", message: "<span class='fa fa-lock'></span> Encryption initialized. <a href='javascript:;' class='verifyKey'>Verify</a>", isMe: false, target: target, unread: false, isFromBuffer: isFromBuffer, small: true});
+		api.emit("newText", {user: "*", userShow: "*", message: "<span class='fa fa-lock'></span> Encryption initialized. <a href='javascript:;' class='verifyKey'>Verify</a>", isMe: false, target: target, unread: false, isFromBuffer: isFromBuffer, small: true, timestamp: comm.time});
 		appcore.sockemit("clearHistory", {target: target, time: comm.time});
 		if(!isFromBuffer && !listItem.hasBundle){
-			appcore.bufferTimestampIgnore.push(comm.time + target);
+			//appcore.bufferTimestampIgnore.push(comm.time + target);
 		}
 	} else {
 		var obj = decryptComm(comm, target);
@@ -675,15 +680,18 @@ function commHandler(comm, target, isFromBuffer){
 			}
 			if(comm.type == 5 || comm.type == 2 || (comm.type >= 7 && comm.type <= 9) || comm.type == 11){
 				if(!isFromBuffer && !listItem.hasBundle){
-					appcore.bufferTimestampIgnore.push(comm.time + target);
+					// Deprecated
+					// appcore.bufferTimestampIgnore.push(comm.time + target);
 				}
 				listItem.canMarkRead = true;
 				
 				api.emit("newText", {user: comm.sender, userShow: (comm.type == 2 ? userDisplay : "*"), message: theMessage, isMe: isMe, timestamp: comm.time, target: target, unread: unread, isFromBuffer: isFromBuffer, bgColor: getUserItem(comm.sender).bgColor});
 				
 				if(comm.type == 2 && appcore.bufferTimestampReplace[comm.time] && appcore.bufferTimestampReplace[comm.time].target == target){
-					api.emit("replaceText", appcore.bufferTimestampReplace[comm.time]); // sanity checks performed by app-view.js
-					// Treat instaces where the original message wasn't loaded when the edit message came the same as if the original message was loaded - by sending a replaceText after the original message is loaded.
+					api.emit("replaceText", appcore.bufferTimestampReplace[comm.time]);
+					// When the edit came in, the original message may not have been loaded. 
+					// bufferTimestampReplace keeps track of edits and will always emit replaceText
+					// when the original message is (eventually) loaded.
 					delete appcore.bufferTimestampReplace[comm.time];
 				}
 				
@@ -804,11 +812,13 @@ appcore.sockon("commBundle", function(data){
 	if(listItem){
 		listItem.hasBundle = (data.small ? 1 : 2);
 		listItem.waitingForBundle = false;
+		
+		data.bundle.reverse(); // hacky.
 	}
-	api.emit("notify", {type: "bundleRecieved", target: data.target, more: data.small});
-	for(var i in data.bundle){
+	for(var i = 0; i < data.bundle.length; i++){
 		commHandler(data.bundle[i], data.target, true);
 	}
+	api.emit("notify", {type: "bundleRecieved", target: data.target, more: data.small});
 });
 appcore.sockon("typingState", function(data){
 	var listItem = appcore.list[appcore.listHash[data.target]];

@@ -459,7 +459,7 @@ a:hover {
 	color: #5C5C5C;
 }
 .convMessage.newDivider {
-	border-top: 1px solid #EEE;
+	border-top: 1px solid rgba(201, 213, 242, 1);
 	padding-top: 4px;
 }
 .convMessage.smallMessage {
@@ -596,9 +596,9 @@ a:hover {
 	height: 15px;
 }
 .readMarker {
-	border-top: none;
-	margin: 0px 0px 0px 0px;
-	border-bottom: 1px dotted #47AD3F;
+	border-top: 1px dotted #E68319;
+	margin: 1px 0px 1px 0px;
+	border-bottom: 1px dotted #FFB25F;
 }
 #convInput {
 	height: 33px;
