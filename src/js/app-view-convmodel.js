@@ -102,7 +102,6 @@
 		var addedReadMarker = false;
 		
 		for(var i = 0; i < this.model[conv].messages.length; i++){
-			console.log("Unread: " + this.model[conv].messages[i].unread + " for " + i);
 			if(!addedReadMarker && this.model[conv].messages[i].unread){
 				addedReadMarker = true;
 				if(i != 0)
@@ -189,7 +188,7 @@
 		*/
 		if(!this.model[conv])
 			throw new Error("Undefined conv " + conv);
-			
+		
 		this.model[conv].messagesStore = this.model[conv].messages.slice(); //clone
 		this.model[conv].messages = [];
 	}
@@ -198,7 +197,7 @@
 		if(!this.model[conv])
 			throw new Error("Undefined conv " + conv);
 			
-		this.model[conv].messages.concat(this.model[conv].messagesStore);
+		this.model[conv].messages = this.model[conv].messages.concat(this.model[conv].messagesStore);
 		this.model[conv].messagesStore = [];
 	}
 }).call(window.ConvModel = {});
