@@ -625,6 +625,7 @@ a:hover {
 #convFooter {
 	background: #F7F7F7;
 	border-top: 1px solid #DADADA;
+	height: 100%;
 }
 #bufferLoading {
 	font-size: 125%;
