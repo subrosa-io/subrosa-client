@@ -262,3 +262,8 @@ function updateCallDuration(){
 function mediaStreamHasTracks(mediaStream){
 	return mediaStream.getAudioTracks().length || mediaStream.getVideoTracks().length;
 }
+
+$("#overlay").click(function(){
+	$("#overlay").css({"opacity": 0, "z-index": -100});
+	$("#permissionGuide").css({"z-index": -101});
+});
