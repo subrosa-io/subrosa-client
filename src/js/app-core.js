@@ -117,7 +117,7 @@ api.on("userExists", function(data){
 });
 function closeEvents(){
 	for(var i in appcore.list){
-		if(appcore.list[i].active){
+		if(appcore.list[i].active && appcore.list[i].active != -1){
 			var oldState = appcore.list[i].active.state;
 			var oldType = appcore.list[i].active.callType;
 			appcore.list[i].active = -1; // cancel all calls
@@ -981,12 +981,12 @@ api.on("dropCall", function(data){
 	var oldState = (listItem.active && listItem.active.state) || "";
 	var oldType = listItem.active && listItem.active.type;
 	if(data.target.length == 37){
-		listItem.active = false;
+		listItem.active = -1;
 	} else {
 		listItem.active.state = "CALLING";
 		listItem.active.callUsers.splice(listItem.active.callUsers.indexOf(appcore.uid), 1);
 		if(listItem.active.callUsers.length == 0){
-			listItem.active = false;
+			listItem.active = -1;
 		}
 	}
 	appcore.activeCall = "";
