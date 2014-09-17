@@ -9,7 +9,23 @@ var statusText = ["Offline", "Online", "Busy", "Away", "Invisible"];
 var hasFocus = true;
 var titleBadgeCount = 0;
 var openNotifications = [];
-$(window).focus(function(){ hasFocus = true; for(var i in openNotifications){ if(openNotifications[i].cancel){ openNotifications[i].cancel() } else { openNotifications[i].close() } }; openNotifications = []; titleBadgeCount=0; document.title = "Subrosa"; setFaviconBadge(0); focusInput()});
+$(window).focus(function(){
+	hasFocus = true;
+	for(var i in openNotifications){
+		if(openNotifications[i].cancel){
+			openNotifications[i].cancel()
+		} else {
+			openNotifications[i].close()
+		}
+	}
+	openNotifications = [];
+	document.title = "Subrosa";
+	if(titleBadgeCount != 0){
+		titleBadgeCount=0;
+		setFaviconBadge(0);
+	}
+	focusInput()
+});
 $(window).blur(function(){ hasFocus = false; });
 
 // Collect mouse movements to seed RNG
@@ -109,7 +125,10 @@ function createAccountHooks(){
 		
 		if($("#createAccountStep2Pass2").val().length){
 			if($("#createAccountStep2Pass1").val() == $("#createAccountStep2Pass2").val()){
-				$("#createAccountStep2Match").text("OK");
+				$("#createAccountStep2Match").text("Matches");
+				if($("#createAccountStep2Match").attr("data-strength" == "Good") || $("#createAccountStep2Strength").attr("data-strength") == "Strong"){
+					$("#createAccountStep2Btn").removeClass("disabled");
+				}
 			} else {
 				$("#createAccountStep2Match").text("Doesn't match.");
 			}
@@ -336,6 +355,9 @@ function mainAppHooks(){
 			changeTabTo(itemName);
 		}
 	});
+	$("#mainSidebar").on("mouseup", ".sidebarListItem", function(){
+		focusInput();
+	});
 	$("#sidebarSearchInput").clearable();
 	$("#sidebarSearchInput").keyup(function(event){
 		searchChange($("#sidebarSearchInput").val());
@@ -393,7 +415,10 @@ function mainAppHooks(){
 	});
 	$("#convButtons").on("click", "button", convButtonClick);
 	$(".convMorePopover").on("click", "li", convButtonClick);
-	api.on("getListsResult", layList);
+	api.on("newList", function(data){
+		ConvModel.createModel(data.id);
+	});
+	api.on("listUpdated", layList); // finished updating, rerender
 	api.on("newText", newText);
 	
 	$("#convInput").keydown(function(event){
@@ -432,9 +457,10 @@ function mainAppHooks(){
 		$(this).hide();
 		$(this).parent().addClass("show"); // force showing the other actions
 		$(this).parent().find(".messageEditCancelButton").show();
-		var $convMessageContent = $(this).parent().parent().find(".convMessageContent");
-		var originalContent = $convMessageContent.text();
-		$convMessageContent.html("<textarea class='messageEditArea' data-original='" + escapeText(originalContent)  + "'>" + escapeText(originalContent) + "</textarea>");
+		var $convMessage = $(this).parent().parent();
+		var $convMessageContent = $convMessage.find(".convMessageContent");
+		var originalContent = ConvModel.getMessage(currentTab, $convMessage.attr("data-timestamp")).message;
+		$convMessageContent.html("<textarea class='messageEditArea'>" + escapeText(originalContent) + "</textarea>");
 		setTimeout(function(){
 			$convMessageContent.find("textarea").focus().moveCaretToEnd();
 		}, 1);
@@ -443,11 +469,10 @@ function mainAppHooks(){
 		$(this).hide();
 		$(this).parent().removeClass("show");
 		$(this).parent().find(".messageEditButton").show();
-		var $convMessageContent = $(this).parent().parent().find(".convMessageContent");
-		var originalContent = $convMessageContent.find("textarea.messageEditArea").attr("data-original");
-		$(this).parent().parent().find(".convMessageContent").html(originalContent);
+		var $convMessage = $(this).parent().parent();
+		$convMessage.after(ConvModel.renderElement(currentTab, $convMessage.attr("data-timestamp"), false)).remove();
 		
-		$("#convInput").focus();
+		focusInput();
 	});
 	$("#convText").on("keydown", ".messageEditArea", function(event){
 		var replaceTimestamp = $(this).parent().parent().attr("data-timestamp");
@@ -609,6 +634,7 @@ function mainAppHooks(){
 	});
 	$("#convText").on("click", "#bufferMore", function(){
 		$(this).text("Loading..");
+		ConvModel.markRead(currentTab);
 		$(this).attr("data-scrollPos", $("#convText")[0].scrollHeight);
 		api.emit("getBuffer", {target: currentTab, small: false});
 	});
@@ -850,13 +876,13 @@ function mainApp(){
 		}
 		layScreen();
 }
-var convBodyHolders = {};
 var convInputHolders = {};
 function changeTabTo(tab){
 	if(currentTab != ""){
 		var currentTrigger = $(".sidebarListItem[data-item=" + currentTab + "]").attr("data-trigger");
 		if(currentTrigger == "conv"){
 			convInputHolders[currentTab] = $("#convInput").val();
+			ConvModel.markRead(currentTab);
 		}
 		$(".tab-" + currentTrigger).hide();
 		$(".sidebarListItem[data-item=" + currentTab + "]").removeClass("activeItem");
@@ -876,8 +902,6 @@ function changeTabTo(tab){
 		api.emit("markRead", {target: currentTab});
 		api.emit("getBuffer", {target: currentTab, small: true});
 		
-		focusInput();
-		
 		refreshTypingDisplay();
 		if(listItem.relatedNotifications && listItem.relatedNotifications.length){
 			for(var i in listItem.relatedNotifications){
@@ -885,6 +909,8 @@ function changeTabTo(tab){
 			}
 			listItem.relatedNotifications = [];
 		}
+		
+		focusInput();
 		
 		if(convInputHolders[currentTab]){
 			$("#convInput").val(convInputHolders[currentTab]);
@@ -906,125 +932,40 @@ function removeList(id){
 }
 function newText(data){
 	var listItem = appcore.list[appcore.listHash[data.target]];
+	var addMessageResponse = ConvModel.addMessage(data.target, data);
 	
-	if(!convBodyHolders[data.target])
-		convBodyHolders[data.target] = {buffer: [], live: [], lastUser: null, lastMsgSystem: null, lastDate: null};
-	
-	var convMessageUser = data.user;
-	var convMessageUserShow = data.userShow;
-	var isChatMessage = !(data.userShow == "*"); // messages with * userShow are not chat (type 2) messages
-	var convMessageContent = parseChatMessage(data.message, data.userShow);
-	var convMessageMeta = (data.timestamp ? "<span title='" + fullTime(data.timestamp) + "'>" + friendlyTime(data.timestamp) + "</span>" : "");
-	var convMessageActions = (data.isMe && data.userShow != "*" ? "<div class='messageEditButton tinyButton'>Edit</div> <div class='messageEditCancelButton tinyButton' style='display: none'>Cancel</div>" : "");
-	var newDivider = true;
-	var lapseDivider = "";
-	
-	var date = new Date(parseInt(data.timestamp)).getDate();
-	
-	if(date != convBodyHolders[data.target].lastDate && convBodyHolders[data.target].lastDate != null){
-		var countdown = dateTime(data.timestamp);
-		lapseDivider = "<div class='convMessage lapseDivider'><i class='fa fa-calendar'></i> " + countdown + "</div>";
-		convBodyHolders[data.target].lastUser = "calendar";
-	}
-	convBodyHolders[data.target].lastDate = date;
-	
-	if(!data.bgColor || data.bgColor.length != 6 || parseInt("0x" + data.bgColor) == NaN){
-		data.bgColor = "inherit";
-	} else {
-		data.bgColor = "#" + data.bgColor;
-	}
-	
-	if(data.userShow != "*"){
-		if(convBodyHolders[data.target].lastUser == data.user && !convBodyHolders[data.target].lastMsgSystem){
-			convMessageUserShow = "&nbsp;";
-			newDivider = false;
-		}
-		convBodyHolders[data.target].lastMsgSystem = false;
-	} else {
-		convBodyHolders[data.target].lastMsgSystem = true;
-	}
-	convBodyHolders[data.target].lastUser = data.user;
-	
-	var htmlBuild = lapseDivider + "<div class='convMessage " + (data.isMe ? "myMessage " : "") + (data.small ? "smallMessage " : "") + (newDivider ? "newDivider " : "") + (isChatMessage ? "chatMessage " : "") + "' data-unread='" + (data.unread && (data.target != currentTab)) + "' style='background-color:" + data.bgColor + "' data-timestamp='" + data.timestamp + "' data-user='" + convMessageUser + "'><div class='newOrb'></div><div class='convMessageActions'>" + convMessageActions + "</div><div class='convMessageUser'>" + convMessageUserShow + "</div><div class='convMessageContent' style='width:" + lastMessageContentWidth + "px'>" + convMessageContent + "</div><div class='convMessageMeta'" + ">" + convMessageMeta + "</span></div></div>";
+	if(!data.isFromBuffer && currentTab == data.target){
+		var $convText = $("#convText");
 		
-	if(data.isFromBuffer){
-		convBodyHolders[data.target].buffer.push(htmlBuild);
-	} else {
-		convBodyHolders[data.target].live.push(htmlBuild);
-	}
-	if(convBodyHolders[data.target].buffer.length + convBodyHolders[data.target].live.length > 300){
-		if(convBodyHolders[data.target].buffer.length){
-			convBodyHolders[data.target].buffer.splice(0, 1);
+		if(addMessageResponse.regenModel){
+			$convText.html(ConvModel.renderModel(data.target));
 		} else {
-			convBodyHolders[data.target].live.splice(0, 1); 
+			$convText.append(ConvModel.renderElement(data.target, "latest"));
 		}
-		if(data.target == currentTab){
-			$(".convMessage:first").remove(); // only keep last 300 messages
-		}
-	}
 		
-	if(data.target == currentTab){
-		var convText = $("#convText");
-		if(data.isFromBuffer) {
-			var bLD = convText.find("#bufferLiveDivider");
-			if(bLD.length){
-				bLD.before(htmlBuild);
-			} else {
-				convText.append(htmlBuild);
-			}
-			convText[0].scrollTop = convText[0].scrollHeight;
-		} else {
-			if(convText[0].scrollTop + convText[0].offsetHeight > convText[0].scrollHeight - 50)
-				convText.stop().animate({scrollTop: convText[0].scrollHeight});
-			convText.append(htmlBuild);
+		if($convText[0].scrollTop + $convText[0].offsetHeight > $convText[0].scrollHeight - 70){
+			setTimeout(function(){
+				$convText.stop().animate({scrollTop: $convText[0].scrollHeight}, 100);
+			}, 10);
 		}
 		api.emit("markRead", {target: currentTab});
-	} else {
+	}
+	if(currentTab != data.target){
 		if(data.unread && !data.isMe){
 			var badge = $(".sidebarListItem[data-item='" + data.target + "'] .unreadBadge");
 			badge.slideDown(500).text(parseInt(badge.text())+1);
 		}
 	}
-	
-	if(data.unread && !data.isFromBuffer && !data.isMe){
-		api.emit("notify", {type: "newMessage", uid: data.user, target: data.target, displayname: data.userShow, message: convMessageContent});
+	if(data.unread && !data.isMe && !data.small){
+		if(!data.isFromBuffer || data.timestamp > new Date().getTime() - 30 * 1000){
+			api.emit("notify", {type: "newMessage", uid: data.user, target: data.target, displayname: data.userShow, message: data.message});
+		}
 	}
 }
 api.on("replaceText", function(data){
-	if(data.target == currentTab){
-		var $theMessage = $(".convMessage[data-timestamp='" + data.replaceTimestamp + "'].chatMessage");
-		if($theMessage.length){
-			if($theMessage.attr("data-user") == data.user){
-				$theMessage.find(".convMessageContent").html(data.newMessage);
-				$theMessage.find(".convMessageContent").addClass("edited");
-			}
-		}
-	}
-	// edit convBodyHolders - due to the way it's set up, editing messages is quite 'hacky'.
-	// good candidate for a refactor.
-	if(convBodyHolders[data.target]){
-		var replaceHTML = function(htmlString){
-			$("#htmlToText").html(htmlString);
-			$convMessage = $("#htmlToText").find(".convMessage");
-			if($convMessage.length &&  $convMessage.hasClass("chatMessage") && $convMessage.attr("data-user") == data.user && $convMessage.attr("data-timestamp") == data.replaceTimestamp){
-				$convMessage.find(".convMessageContent").html(data.newMessage);
-				$convMessage.find(".convMessageContent").addClass("edited");
-				return $("#htmlToText").html();
-			} else {
-				return htmlString;
-			}
-		}
-		for(var i in convBodyHolders[data.target].buffer){
-			if(convBodyHolders[data.target].buffer[i].indexOf(data.replaceTimestamp) != -1){
-				convBodyHolders[data.target].buffer[i] = replaceHTML(convBodyHolders[data.target].buffer[i]);
-			}
-		}
-		for(var i in convBodyHolders[data.target].live){
-			if(convBodyHolders[data.target].live[i].indexOf(data.replaceTimestamp) != -1){
-				convBodyHolders[data.target].live[i] = replaceHTML(convBodyHolders[data.target].live[i]);
-			}
-		}
-		$("#htmlToText").html("");
+	var index = ConvModel.replaceMessage(data.target, data.user, data.replaceTimestamp, data.newMessage);
+	if(index != -1 && data.target == currentTab){
+		$("#convText .chatMessage[data-timestamp='" + data.replaceTimestamp + "']").after(ConvModel.renderElement(data.target, index, false)).remove();
 	}
 });
 function parseChatMessage(input, userDisplay){
@@ -1222,9 +1163,11 @@ function convButtonClick(event){
 	} else if($(this).attr("id") == "moreButton"){
 		$(this).popover($(".convMorePopover"));
 	} else if($(this).attr("id") == "removeFromList" || $(this).attr("id") == "removeFromListRoom"){
-		api.emit("removeList", {id: currentTab});
+		var idToRemove = currentTab;
+		api.emit("removeList", {id: idToRemove});
 		$("#moreButton").popover($(".convMorePopover"));
-		removeList(currentTab);
+		removeList(idToRemove);
+		ConvModel.deleteModel(idToRemove);
 	} else if($(this).attr("id") == "removeFromContacts"){
 		api.emit("removeContact", {id: currentTab});
 		layContent(true, false);
@@ -1242,8 +1185,8 @@ function convButtonClick(event){
 		changeTabTo("meta");
 	} else if($(this).attr("id") == "clearHistory"){
 		api.emit("clearHistory", {target: currentTab});
-		convBodyHolders[currentTab] = {live: [], buffer: []};
-		$("#convText").text("");
+		ConvModel.clearModel(currentTab);
+		$("#convText").html(ConvModel.renderModel(currentTab));
 		$.modal("historyCleared");
 	} else if($(this).attr("id") == "voiceButton"){
 		if(!$(this).hasClass("disabled")){
@@ -1426,41 +1369,24 @@ api.on("notify", function(data){
 			}
 		}
 	} else if(data.type == "messageAck"){
-		// Replaces timestamp of HTML element & convBodyHolder to server timestamp
-		if(data.target == currentTab){
-			$(".convMessage[data-timestamp='" + data.clientTs + "']").attr("data-timestamp", data.serverTs);
-		}
-		if(convBodyHolders[data.target]){
-			for(var i in convBodyHolders[data.target].live){
-				var messageHTML = convBodyHolders[data.target].live[i];
-				// user cannot input ' , it's converted to the HTML entity
-				if(messageHTML.indexOf("data-timestamp='" + data.clientTs + "'") != -1){
-					convBodyHolders[data.target].live[i] = messageHTML.replace("data-timestamp='" + data.clientTs + "'", "data-timestamp='" + data.serverTs + "'");
-					return;
-				}
-			}
-		}
+		ConvModel.ackMessage(data.target, data.clientTs, data.serverTs);
+		// Fast timestamp replace
+		$("#convText .convMessage[data-timestamp='" + data.clientTs + "']").attr("data-timestamp", data.serverTs);
 	} else if(data.type == "changePassOldWrong"){
 		$("#editProfilePassOldFail").show().shake();
-	} else if(data.type == "bundleRecieved"){
+	} else if(data.type == "beginBundle"){
+		ConvModel.storeMessages(data.target);
+	} else if(data.type == "endBundle"){
 		var lastScrollPos;
+		
+		ConvModel.restoreMessages(data.target);
+		ConvModel.markBufferState(data.target, (data.more ? "more" : "empty"));
 		if(data.target == currentTab){
-			$("#convText").find("#bufferLoading,#bufferMore").remove();
-			if(data.more){
-				$("#convText").prepend("<a id='bufferMore' href='javascript:;'><span class='fa fa-clock-o'></span>Decrypt earlier history</a>");
-			} else {
-				var bufferMore = $("#convText").find("#bufferMore");
-				lastScrollPos = bufferMore.attr("data-scrollPos");
-			}
+			lastScrollPos = $("#convText")[0].scrollHeight - $("#convText")[0].scrollTop;
+			$("#convText").html(ConvModel.renderModel(currentTab)); // rerender
 		}
-		if(!data.more && convBodyHolders[data.target] && convBodyHolders[data.target].buffer.length){
-			convBodyHolders[data.target].buffer = [];
-			layContent(false, true);
-			if(lastScrollPos){
-				setTimeout(function(){
-					$("#convText")[0].scrollTop = $("#convText")[0].scrollHeight-lastScrollPos;
-				}, 10);
-			}
+		if(lastScrollPos){
+			$("#convText")[0].scrollTop = $("#convText")[0].scrollHeight-lastScrollPos;
 		}
 	} else if(data.type == "userIdentified"){
 		if(data.target == currentTab)

@@ -224,23 +224,11 @@ function layContent(header, body){
 			convFooter.find("#convEmoticon").show();
 		}
 		if(body){
-			curTab.find("#convText").html((!listItem.hasBundle ? "<div id='bufferLoading'>Loading..</div>": (listItem.hasBundle == 1 ? "<a id='bufferMore' href='javascript:;'><span class='fa fa-clock-o'></span>Decrypt earlier history</a>" : "")) + convBodyHolders[curItem].buffer.join("") + "<div id='bufferLiveDivider'></div>" + convBodyHolders[curItem].live.join(""));
+			curTab.find("#convText").html(ConvModel.renderModel(listItem.id));
 			curTab.find("#convText")[0].scrollTop = curTab.find("#convText")[0].scrollHeight;
-			
-			curTab.find("#convText .convMessage[data-unread=true]:not(.smallMessage):first").before("<hr class='readMarker' />");
-			setTimeout(function(){
-				// do after body display is re-enabled.
-				curTab.find("#convText .convMessage[data-unread=true]").attr("data-unread", false);
-			}, 70);
-			for(var i in convBodyHolders[curItem].buffer){
-				convBodyHolders[curItem].buffer[i] = convBodyHolders[curItem].buffer[i].replace("data-unread='true'", "data-unread='false'");
-			}
-			for(var i in convBodyHolders[curItem].live){
-				convBodyHolders[curItem].live[i] = convBodyHolders[curItem].live[i].replace("data-unread='true'", "data-unread='false'");
-			}
 		}
 		layScreen();
-		$(".sidebarListItem[data-item='" + listItem.id + "'] .listItemIcon").attr("data-status", (typeof listItem.status != "undefined" ? listItem.status : ""));
+		$(".sidebarListItem[data-item='" + listItem.id + "']").attr("data-status", (typeof listItem.status != "undefined" ? listItem.status : ""));
 	}
 	document.getElementsByTagName("body")[0].style['display'] = 'block';
 }
@@ -292,8 +280,6 @@ function layList(){
 			if(!added){ // add at the end
 				$(".sidebarListItem:last").after(createItemHTML("conv", item));
 			}
-			if(!convBodyHolders[item.id])
-				convBodyHolders[item.id] = {buffer: [], live: []};
 			if($(".sidebarListItem[data-item='searchElement']").attr("data-searchelementadd") == item.id){
 				$(".sidebarSearchInput").val("").trigger("keyup");
 				changeTabTo(item.id);
