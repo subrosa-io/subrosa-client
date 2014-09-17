@@ -8,18 +8,17 @@
 		}
 	}
 	this.clearModel = function(conv){
-		if(!this.model[conv])
-			throw new Error("Undefined conv " + conv);
+		this.createModel(conv);
+		
 		this.model[conv].messages = [];
 		this.model[conv].messagesStore = [];
 		this.model[conv].knownTimestamps = [];
 	}
 	this.deleteModel = function(conv){
-		if(!this.model[conv])
-			throw new Error("Undefined conv " + conv);
 		delete this.model[conv];
 	}
 	this.addMessage = function(conv, message){
+		this.createModel(conv);
 		// Always adds message to the bottom
 		if(!this.model[conv])
 			throw new Error("Undefined conv " + conv);
@@ -44,8 +43,8 @@
 		return returnObj;
 	}
 	this.getMessage = function(conv, identifier){
-		if(!this.model[conv])
-			throw new Error("Undefined conv " + conv);
+		this.createModel(conv);
+		
 		if(identifier < 1000){
 			if(this.model[conv].messages[identifier])
 				return this.model[conv].messages[identifier];
@@ -186,8 +185,7 @@
 		   This empties out the content of the model's messages, so the buffer messgges can be
 		   added normally.
 		*/
-		if(!this.model[conv])
-			throw new Error("Undefined conv " + conv);
+		this.createModel(conv);
 		
 		this.model[conv].messagesStore = this.model[conv].messages.slice(); //clone
 		this.model[conv].messages = [];
