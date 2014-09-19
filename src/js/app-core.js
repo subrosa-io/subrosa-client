@@ -14,7 +14,7 @@ var api = {
 		this.map[type].push(handler)
 	}
 };
-var appcore = {version: 0.31, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeyKdf:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferTimestampReplace: [], userList: [], currentUploadTarget:""};
+var appcore = {version: 0.31, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeyKdf:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferReplace: [], bufferReceivedHash: [], userList: [], currentUploadTarget:""};
 
 appcore.sockemit = function(type, message){
 	if(!appcore.sock){
@@ -479,26 +479,26 @@ appcore.sockon("comm", function(d){
 });
 var callTimeout;
 function commHandler(comm, target, isFromBuffer){
-	if(!target){
-		target = comm.target;
-	}
-	if(!isFromBuffer){
+	if(!target)
+		target = comm.target
+	if(!isFromBuffer)
 		isFromBuffer = false;
-	}
-	if(!comm.sender){
+	if(!comm.sender)
 		comm.sender = appcore.uid;
-	}
-	if(!comm.time){
+	if(!comm.time)
 		comm.time = new Date().getTime();
-	}
+		
 	if(!comm.type)
 		return;
-	if(getProp(comm.sender + "-blocked")){
+	if(getProp(comm.sender + "-blocked"))
 		return;
-	}
-	if(target.length == 37 && !appcore.list[appcore.listHash[target]]){
+	if(target.length == 37 && !appcore.list[appcore.listHash[target]])
 		return;
-	}
+	if(appcore.bufferReceivedHash[target + comm.time])
+		return;
+		
+	appcore.bufferReceivedHash[target + comm.time] = true;
+	
 	var listItem = (appcore.list[appcore.listHash[target]] ? appcore.list[appcore.listHash[target]] : false);
 	var unread = listItem.lastRead < comm.time;
 	
@@ -547,8 +547,8 @@ function commHandler(comm, target, isFromBuffer){
 					}
 				}
 				if(obj.replaceTimestamp){
-					appcore.bufferTimestampReplace[obj.replaceTimestamp] = {target: target, newMessage: theMessage, replaceTimestamp: obj.replaceTimestamp, user: comm.sender, replacedTime: comm.time}
-					api.emit("replaceText", appcore.bufferTimestampReplace[obj.replaceTimestamp]);
+					appcore.bufferReplace[obj.replaceTimestamp] = {target: target, newMessage: theMessage, replaceTimestamp: obj.replaceTimestamp, user: comm.sender, replacedTime: comm.time}
+					api.emit("replaceText", appcore.bufferReplace[obj.replaceTimestamp]);
 					return;
 				}
 			} else if(comm.type == 5){
@@ -666,12 +666,12 @@ function commHandler(comm, target, isFromBuffer){
 				
 				api.emit("newText", {user: comm.sender, userShow: (comm.type == 2 ? userDisplay : "*"), message: theMessage, isMe: isMe, timestamp: comm.time, target: target, unread: unread, isFromBuffer: isFromBuffer, bgColor: getUserItem(comm.sender).bgColor});
 				
-				if(comm.type == 2 && appcore.bufferTimestampReplace[comm.time] && appcore.bufferTimestampReplace[comm.time].target == target){
-					api.emit("replaceText", appcore.bufferTimestampReplace[comm.time]);
+				if(comm.type == 2 && appcore.bufferReplace[comm.time] && appcore.bufferReplace[comm.time].target == target){
+					api.emit("replaceText", appcore.bufferReplace[comm.time]);
 					// When the edit came in, the original message may not have been loaded. 
-					// bufferTimestampReplace keeps track of edits and will always emit replaceText
+					// bufferReplace keeps track of edits and will always emit replaceText
 					// when the original message is (eventually) loaded.
-					delete appcore.bufferTimestampReplace[comm.time];
+					delete appcore.bufferReplace[comm.time];
 				}
 				
 				if(listItem.users && listItem.users.indexOf(comm.sender) == -1 && (comm.type != 9 || !obj.quit)){
@@ -1234,7 +1234,8 @@ api.on("logout", function(data){
 	appcore.list = [];
 	appcore.listHash = [];
 	appcore.profileBlob = {};
-	appcore.bufferTimestampReplace = [];
+	appcore.bufferReplace = [];
+	appcore.bufferReceivedHash = [];
 	appcore.userList = [];
 	appcore.derivedKeyHash = "";
 	appcore.derivedKey = "";
