@@ -4,7 +4,7 @@
 	
 	this.createModel = function(conv){
 		if(!this.model[conv]){
-			this.model[conv] = {messages: [], messagesStore: [], knownTimestamps: [], bufferState: "loading"};
+			this.model[conv] = {messages: [], messagesStore: [], bufferState: "loading"};
 		}
 	}
 	this.clearModel = function(conv){
@@ -12,7 +12,6 @@
 		
 		this.model[conv].messages = [];
 		this.model[conv].messagesStore = [];
-		this.model[conv].knownTimestamps = [];
 	}
 	this.deleteModel = function(conv){
 		delete this.model[conv];
@@ -23,15 +22,10 @@
 		if(!this.model[conv])
 			throw new Error("Undefined conv " + conv);
 		
-		var returnObj = {ignored: false, regenModel: false};
+		var returnObj = {regenModel: false};
 		// Fields added by the model
 		message.edited = false; 
 		
-		if(this.model[conv].knownTimestamps[message.timestamp]){
-			returnObj.ignored = true;
-			return returnObj;
-		}
-		this.model[conv].knownTimestamps[message.timestamp] = true;
 		this.model[conv].messages.push(message);
 		
 		// Limit max elements rendered
