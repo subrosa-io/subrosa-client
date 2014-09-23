@@ -126,7 +126,7 @@ function createAccountHooks(){
 		if($("#createAccountStep2Pass2").val().length){
 			if($("#createAccountStep2Pass1").val() == $("#createAccountStep2Pass2").val()){
 				$("#createAccountStep2Match").text("Matches");
-				if($("#createAccountStep2Match").attr("data-strength" == "Good") || $("#createAccountStep2Strength").attr("data-strength") == "Strong"){
+				if($("#createAccountStep2Match").attr("data-strength") == "Good" || $("#createAccountStep2Strength").attr("data-strength") == "Strong"){
 					$("#createAccountStep2Btn").removeClass("disabled");
 				}
 			} else {
