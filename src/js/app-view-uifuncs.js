@@ -240,8 +240,11 @@ function stopTitleAlert(){
 	document.title = originalTitle;
 }
 // Prevent the backspace key from navigating back.
+var lastKeypressTime;
 $(document).bind('keydown', function (event) {
     var doPrevent = false;
+    if(!event.ctrlKey && !event.shiftKey)
+		lastKeypressTime = new Date().getTime();
     if (event.which === 8) {
         var d = event.srcElement || event.target;
         if ((d.tagName.toUpperCase() === 'INPUT' && 
@@ -265,3 +268,10 @@ $(document).bind('keydown', function (event) {
         event.preventDefault();
     }
 });
+// Ask for confirmation when closing tab if typed recently
+window.onbeforeunload = function(event){
+	if(!getProp("disableConfirmClosing")){
+		if(lastKeypressTime > new Date().getTime() - 1.5 * 60 * 1000)
+			return "Exit Subrosa?";
+	}
+}

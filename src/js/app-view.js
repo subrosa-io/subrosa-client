@@ -598,6 +598,10 @@ function mainAppHooks(){
 		api.emit("setProp", {name: "disableEmoticons", value: !this.checked});
 		layContent(false, false); 
 	});
+	$("#enableConfirmClosingCheckbox").change(function(){
+		api.emit("setProp", {name: "disableConfirmClosing", value: !this.checked});
+		layContent(false, false); 
+	});
 	$("#roomInviteConfirm").click(function(){
 		if($(this).hasClass("disabled"))
 			return;
@@ -1020,7 +1024,9 @@ function loggedInCalls(){
 	if(getProp("disableNotifications"))
 		$("#enableNotificationsCheckbox").attr("checked", false);
 	if(getProp("disableEmoticons"))
-		$("#enableEMoticonsCheckbox").attr("checked", false);
+		$("#enableEmoticonsCheckbox").attr("checked", false);
+	if(getProp("disableConfirmClosing"))
+		$("#enableConfirmClosingCheckbox").attr("checked", false);
 }
 const shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function friendlyTime(timeMs){
