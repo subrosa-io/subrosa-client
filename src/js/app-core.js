@@ -576,7 +576,7 @@ function commHandler(comm, target, isFromBuffer){
 						listItem.active = {type: obj.type, state: "CALLING", myInitiate: false};
 						if(listItem.id.length == 37){
 							callTimeout = setTimeout(function(){
-								if(listItem.active.state == "CALLING"){
+								if(listItem.active && listItem.active.state == "CALLING"){
 									var oldType = listItem.active.type;
 									listItem.active = -1;
 									api.emit("callUpdate", {state: "", oldState: "CALLING", target: target, callType: oldType});

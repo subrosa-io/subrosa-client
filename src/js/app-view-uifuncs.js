@@ -270,7 +270,7 @@ $(document).bind('keydown', function (event) {
 });
 // Ask for confirmation when closing tab if typed recently
 window.onbeforeunload = function(event){
-	if(!getProp("disableConfirmClosing")){
+	if(!getProp("disableConfirmClosing") && appcore.profileBlob.props){
 		if(lastKeypressTime > new Date().getTime() - 1.5 * 60 * 1000)
 			return "Exit Subrosa?";
 	}
