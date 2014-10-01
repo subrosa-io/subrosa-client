@@ -43,4 +43,29 @@
 		};
 		setTimeout(step);
 	}
+	
+	this.processKeyExchange = function(encrypted, signature, otherPubKey, myPrivateKey){		
+		try {
+			var decrypted = myPrivateKey.decrypt(encrypted, 'RSA-OAEP');
+			
+			var md = forge.md.sha256.create();
+			md.update(decrypted, 'utf8');
+			
+			otherPubKey = forge.pki.publicKeyFromPem(otherPubKey);
+			var verified = otherPubKey.verify(md.digest().bytes(), signature);
+			
+			if(verified){
+				var convKey = decrypted.substr(0,32);
+				var convId = decrypted.substr(32);
+				
+				if(convId.length == 37){
+					return convKey;
+				}
+			}
+		} catch ( exception ) {
+			throw exception;
+		}
+		return false;
+	}
+	
 }).call(window.SubrosaCrypto = {});

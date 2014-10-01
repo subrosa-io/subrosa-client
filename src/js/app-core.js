@@ -505,11 +505,18 @@ function commHandler(comm, target, isFromBuffer){
 	if(comm.type == 1){
 		if(comm.sender != appcore.uid){ // Don't keyExchange if it's my keyExchange
 			if(!appcore.profileBlob.conversations[target]){ // Don't keyExchange if already done so
-				decryptAndVerifyRSA(comm.data, comm.auxdata, comm.pubKey);
+				
+				var myPrivateKey = forge.pki.privateKeyFromPem(appcore.profileBlob.privateKey);
+				var convKey = SubrosaCrypto.processKeyExchange(comm.data, comm.auxdata, comm.pubKey, myPrivateKey);
+				
+				if(convKey){
+					appcore.profileBlob.conversations[target] = convKey;
+					updateBlob(true, 'processKeyExchange');
+				}
 			}
 		}
 		if(comm.pubKey){
-			listItem.pubKey = comm.pubKey; // In all cases comm.pubKey is pubkey of other party.
+			listItem.pubKey = comm.pubKey; // public key of other party.
 		}
 		api.emit("newText", {user: "*", userShow: "*", message: "<span class='fa fa-lock'></span> Encryption initialized. <a href='javascript:;' class='verifyKey'>Verify</a>", isMe: false, target: target, unread: unread, isFromBuffer: isFromBuffer, small: true, timestamp: comm.time});
 		appcore.sockemit("clearHistory", {target: target, time: comm.time});
@@ -1172,30 +1179,6 @@ appcore.sockon("getPubKey", function(data){
 	var encrypted = otherPartyPublicKey.encrypt(signedMessage, 'RSA-OAEP');
 	listItem.keyExchange = {encrypted: encrypted, signature: signature, convKey: convKey};
 });
-function decryptAndVerifyRSA(encrypted, signature, otherPubKey){
-	var privateKey = forge.pki.privateKeyFromPem(appcore.profileBlob.privateKey);
-	try {
-		var decrypted = privateKey.decrypt(encrypted, 'RSA-OAEP');
-		
-		var md = forge.md.sha256.create();
-		md.update(decrypted, 'utf8');
-		
-		otherPubKey = forge.pki.publicKeyFromPem(otherPubKey);
-		var verified = otherPubKey.verify(md.digest().bytes(), signature);
-		
-		if(verified){
-			var convKey = decrypted.substr(0,32);
-			var convId = decrypted.substr(32);
-			
-			if(convId.length == 37){
-				appcore.profileBlob.conversations[convId] = convKey;
-				updateBlob(true, 'decryptAndVerify');
-			}
-		}
-	} catch ( exception ) {
-		throw exception;
-	}
-}
 var commReadBuffer = [];
 var commReadBufferTimeout = -1;
 api.on("markRead", function(data){
