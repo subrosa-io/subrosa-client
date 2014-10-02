@@ -947,7 +947,7 @@ function newText(data){
 			$convText.append(ConvModel.renderElement(data.target, "latest"));
 		}
 		
-		if($convText[0].scrollTop + $convText[0].offsetHeight > $convText[0].scrollHeight - 70){
+		if($convText[0].scrollTop + $convText[0].offsetHeight > $convText[0].scrollHeight - 100){
 			setTimeout(function(){
 				$convText.stop().animate({scrollTop: $convText[0].scrollHeight}, 100);
 			}, 10);
