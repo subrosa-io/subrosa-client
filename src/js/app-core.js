@@ -543,7 +543,7 @@ function commHandler(comm, target, isFromBuffer){
 			var theMessage = "";
 			
 			if(comm.type == 2){
-				theMessage = escapeText(obj.msg);
+				theMessage = obj.msg;
 				if(listItem.typings){
 					for(var i in listItem.typings){
 						if(listItem.typings[i][0] == comm.sender){
