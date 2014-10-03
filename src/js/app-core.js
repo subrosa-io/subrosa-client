@@ -543,7 +543,7 @@ function commHandler(comm, target, isFromBuffer){
 			var theMessage = "";
 			
 			if(comm.type == 2){
-				theMessage = obj.msg;
+				theMessage = escapeText(obj.msg);
 				if(listItem.typings){
 					for(var i in listItem.typings){
 						if(listItem.typings[i][0] == comm.sender){
@@ -913,6 +913,9 @@ api.on("editText", function(data){
 });
 function escapeText(input){
 	return input.toString().replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function unescapeText(input){
+	return input.toString().replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 }
 api.on("clearHistory", function(data){
 	appcore.sockemit("clearHistory", data);

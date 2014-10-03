@@ -461,7 +461,7 @@ function mainAppHooks(){
 		var $convMessageContent = $convMessage.find(".convMessageContent");
 		var originalContent = ConvModel.getMessage(currentTab, $convMessage.attr("data-timestamp")).message;
 		$convMessageContent.html("<textarea class='messageEditArea'></textarea>");
-		$convMessageContent.find("textarea.messageEditArea").val(originalContent);
+		$convMessageContent.find("textarea.messageEditArea").val( unescapeText(originalContent) ); // no need to escape for .val(), prevents &lt; , &gt; , etc appearing when editing.
 		setTimeout(function(){
 			$convMessageContent.find("textarea").focus().moveCaretToEnd();
 		}, 1);
@@ -974,8 +974,6 @@ api.on("replaceText", function(data){
 	}
 });
 function parseChatMessage(input, userDisplay){
-	input = escapeText(input);
-	
 	var links = input.match(/(^|\s|\n)https?:\/\/[A-Za-z0-9\-]+\.[A-za-z0-9\/?&%;.#=\-~+!:]+/g);
 	for(var i in links){
 		links[i] = links[i].trim().replace("\n", "");
