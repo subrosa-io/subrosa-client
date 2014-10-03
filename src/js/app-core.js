@@ -852,7 +852,7 @@ api.on("blockUser", function(data){
 		if(listItem.contact == 2){
 			api.emit("removeContact", {id: currentTab});
 		}
-		if(listItem.typings.length){
+		if(listItem.typings && listItem.typings.length){
 			listItem.typings = [];
 			api.emit("refreshTypingDisplay", {});
 		}
