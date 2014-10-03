@@ -1016,7 +1016,7 @@ p.userRankDesc {
 .tab-home {
 	overflow: auto;
 }
-#homeNews > .homeNewsElem {
+#homeNewsContent > .homeNewsElem {
 	margin-bottom: 10px;
 }
 #homeNews .content {

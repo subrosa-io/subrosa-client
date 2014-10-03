@@ -1249,7 +1249,7 @@ api.on("homeData", function(data){
 		}
 	}
 	homeNewsHTML += '</div>';
-	$("#homeNews").append(homeNewsHTML);
+	$("#homeNewsContent").html(homeNewsHTML);
 });
 api.on("versionCheck", function(status){
 	if(status == 0){
