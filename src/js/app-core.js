@@ -576,7 +576,7 @@ function commHandler(comm, target, isFromBuffer){
 						listItem.active = {type: obj.type, state: "CALLING", myInitiate: false};
 						if(listItem.id.length == 37){
 							callTimeout = setTimeout(function(){
-								if(listItem.active && listItem.active.state == "CALLING"){
+								if(listItem.active != -1 && listItem.active.state == "CALLING"){
 									var oldType = listItem.active.type;
 									listItem.active = -1;
 									api.emit("callUpdate", {state: "", oldState: "CALLING", target: target, callType: oldType});
@@ -600,7 +600,7 @@ function commHandler(comm, target, isFromBuffer){
 							clearTimeout(callTimeout);
 							var oldState = listItem.active.state;
 							var oldType = listItem.active.type;
-							listItem.active = -1;
+							delete listItem.active;
 							appcore.activeCall = "";
 							api.emit("callUpdate", {state: "", oldState: oldState, target: target, callType: oldType});
 						} else {
@@ -634,7 +634,7 @@ function commHandler(comm, target, isFromBuffer){
 						} else {
 							theMessage = "<b>" + userDisplay + " left the room.</b>";
 						}
-						if(listItem.active && listItem.active.callUsers && listItem.active.callUsers.indexOf(comm.sender) !== -1){
+						if(listItem.active && listItem.active.callUsers.indexOf(comm.sender) !== -1){
 							handleRoomCallQuit(target, comm.sender);
 						}
 						if(listItem.users.indexOf(comm.sender) != -1){
@@ -694,7 +694,7 @@ function handleRoomCallQuit(target, quitter){
 	if(listItem.active && listItem.active.callUsers.indexOf(quitter) != -1){
 		listItem.active.callUsers.splice(listItem.active.callUsers.indexOf(quitter), 1);
 		if(listItem.active.callUsers.length == 0){
-			listItem.active = -1;
+			delete listItem.active;
 			api.emit("callUpdate", {state: "CALLING", oldState: "", target: target, callType: listItem.active.type});
 		} else {
 			api.emit("notify", {type: "callUserUpdate", event: "QUIT", target: listItem.id, uid: quitter, callType: listItem.active.type});
@@ -975,7 +975,7 @@ api.on("makeCall", function(data){
 		callTimeout = setTimeout(function(){
 			if(listItem.active.state == "CALLING"){
 				var callType = listItem.active.type;
-				listItem.active = -1;
+				delete listItem.active;
 				api.emit("callUpdate", {state: "", oldState: "CALLING", target: listItem.id, callType: callType});
 			}
 		}, 30 * 1000);
@@ -991,12 +991,12 @@ api.on("dropCall", function(data){
 	var oldState = (listItem.active && listItem.active.state) || "";
 	var oldType = listItem.active && listItem.active.type;
 	if(data.target.length == 37){
-		listItem.active = -1;
+		delete listItem.active;
 	} else {
 		listItem.active.state = "CALLING";
 		listItem.active.callUsers.splice(listItem.active.callUsers.indexOf(appcore.uid), 1);
 		if(listItem.active.callUsers.length == 0){
-			listItem.active = -1;
+			delete listItem.active;
 		}
 	}
 	appcore.activeCall = "";
