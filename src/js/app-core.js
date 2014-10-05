@@ -1102,6 +1102,7 @@ function decryptComm(comm, target){
 	} catch (error) {
 		var decryptedData = cipher.output.data;
 	}
+	
 	var decryptedObject;
 	try {
 		decryptedObject = JSON.parse(decryptedData);
@@ -1139,7 +1140,7 @@ api.on("sendComm", function(data){
 	var cipher = forge.cipher.createCipher('AES-GCM', convKey); 
 	
 	cipher.start({iv: iv, tagLength: 128});
-	cipher.update(forge.util.createBuffer(JSON.stringify(data.message)), 'utf8');
+	cipher.update(forge.util.createBuffer(JSON.stringify(data.message), 'utf8'));
 	cipher.finish();
 	
 	var encrypted = cipher.output.data;
