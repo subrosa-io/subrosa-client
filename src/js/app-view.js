@@ -655,12 +655,14 @@ function mainAppHooks(){
 		getCallUsers();
 	});
 	$("#convSubtitleUsersList,#usersMorePopoverContent,#convText,#modal").on('click', '.userLink', function(){
-		var convID = "conv" + sortUID(appcore.uid, $(this).attr("data-uid"));
-		if(appcore.listHash[convID]){
-			changeTabTo(convID);
-		} else {
-			api.emit("addList", {id: convID});
-			$(this).text("Loading..");
+		if(appcore.uid != $(this).attr("data-uid")){
+			var convID = "conv" + sortUID(appcore.uid, $(this).attr("data-uid"));
+			if(appcore.listHash[convID]){
+				changeTabTo(convID);
+			} else {
+				api.emit("addList", {id: convID});
+				$(this).text("Loading..");
+			}
 		}
 		if($(this).parents("#usersMorePopoverContent").length)
 			$(this).popover($("#usersMorePopover")); // clear popover
