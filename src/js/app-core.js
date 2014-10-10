@@ -1030,19 +1030,13 @@ function acceptCall(target, sendAccept){
 	}
 }
 api.on("verifyKey", function(data){
-	var otherPubKey = appcore.list[appcore.listHash[data.target]].pubKey;
+	var otherPartyPubKey = appcore.list[appcore.listHash[data.target]].pubKey;
 	var myPubKey = appcore.pubKey;
+	var otherPartyUid = appcore.list[appcore.listHash[data.target]].uid;
 	
-	var keyCombined;
-	if(data.target.substr(4).split("-")[0] == appcore.uid){
-		keyCombined = myPubKey + otherPubKey;
-	} else {
-		keyCombined = otherPubKey + myPubKey;
-	}
+	var fingerprint = SubrosaCrypto.getFingerprintHash(myPubKey, otherPartyPubKey, appcore.uid, otherPartyUid);
 	
-	var md = forge.md.sha256.create();
-	md.update(keyCombined);
-	api.emit("notify", {type: "verifyKeyInfo", hash: md.digest().toHex()});
+	api.emit("notify", {type: "verifyKeyInfo", hash: fingerprint});
 });
 var fingerprintsToVerify = [];
 api.on("verifyFingerprint", function(data){
@@ -1283,6 +1277,10 @@ function updateBlob(force, info){
 		var modified = false;
 		if(!appcore.profileBlob.props){
 			newProfileBlob.props = {};
+			modified = true;
+		}
+		if(!appcore.profileBlob.conversations){
+			newProfileBlob.conversations = {};
 			modified = true;
 		}
 		if(modified || force){

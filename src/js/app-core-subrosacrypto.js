@@ -68,4 +68,19 @@
 		return false;
 	}
 	
+	this.getFingerprintHash = function(myPubKey, otherPartyPubKey, myUid, otherPartyUid){
+				
+		var keyCombined;
+		if(otherPartyUid < appcore.uid){
+			keyCombined = myPubKey + otherPartyPubKey;
+		} else {
+			keyCombined = otherPartyPubKey + myPubKey;
+		}
+		
+		var md = forge.md.sha256.create();
+		md.update(keyCombined);
+		
+		return md.digest().toHex();
+	}
+	
 }).call(window.SubrosaCrypto = {});
