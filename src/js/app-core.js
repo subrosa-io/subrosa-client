@@ -576,7 +576,7 @@ function commHandler(comm, target, isFromBuffer){
 						listItem.active = {type: obj.type, state: "CALLING", myInitiate: false};
 						if(listItem.id.length == 37){
 							callTimeout = setTimeout(function(){
-								if(listItem.active != -1 && listItem.active.state == "CALLING"){
+								if(listItem && listItem.active != -1 && listItem.active.state == "CALLING"){
 									var oldType = listItem.active.type;
 									listItem.active = -1;
 									api.emit("callUpdate", {state: "", oldState: "CALLING", target: target, callType: oldType});
@@ -755,7 +755,7 @@ appcore.sockon("statusUpdate", function(data){
 		api.emit("notify", {type: "statusChanged", uid: data.target, displayname: relevantList.displayname || relevantList.username, newStatus: data.status, oldStatus: relevantList.status});
 		relevantList.status = data.status;
 		if(data.status === 0){
-			if(relevantList.active){
+			if(relevantList.active && relevantList.active != -1){
 				api.emit("dropCall", {target: relevantList.id});
 			} else {
 				for(var i in appcore.list){
@@ -962,7 +962,7 @@ appcore.sockon("gotPart", function(data){
 });
 api.on("makeCall", function(data){
 	var listItem = appcore.list[appcore.listHash[data.target]];
-	if(listItem.active && listItem.active.state == "INCALL"){
+	if(listItem.active && listItem.active != -1 && listItem.active.state == "INCALL"){
 		api.emit("dropCall", {target: data.target});
 	}
 	listItem.active = {type: data.type, state: "CALLING"};
@@ -1260,7 +1260,7 @@ window.onerror = function(errorMessage, url, line, column, stackTrace){
 		var message = errorMessage + "\n(Browser does not support stack traces)\n" + environmentDetails;
 	}
 	
-	api.emit("errorReporter", {trace: message + "\nHas patched raw send()"});
+	api.emit("errorReporter", {trace: message});
 	return false;
 }
 api.on("sendErrorReport", function(data){
