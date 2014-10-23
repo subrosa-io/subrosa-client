@@ -133,7 +133,9 @@ function handleRemoteStreamAdded(event){
 	rtcSendSignal({type: "readyStep2"}, event.target.uid); // event.target is apprtc.pc[]
 	
 	setTimeout(function(){
-		verifyFingerprint(event.target.uid, apprtc.pc[event.target.uid].remoteDescription.sdp, apprtc.pc[event.target.uid].localDescription.sdp);
+		if(apprtc.pc[event.target.uid]){
+			verifyFingerprint(event.target.uid, apprtc.pc[event.target.uid].remoteDescription.sdp, apprtc.pc[event.target.uid].localDescription.sdp);
+		}
 	}, 1000);
 }
 function handleRemoteStreamRemoved(event){

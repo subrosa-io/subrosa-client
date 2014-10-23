@@ -588,7 +588,9 @@ function commHandler(comm, target, isFromBuffer){
 						api.emit("callUpdate", {state: "CALLING", oldState: "", target: target, callType: listItem.active.type});
 					} else if(obj.type == "acceptCall"){
 						if(target.length == 37){
-							acceptCall(listItem.id, false);
+							if(listItem.active && listItem.active != -1){
+								acceptCall(listItem.id, false);
+							}
 						} else {
 							if(listItem.active){
 								listItem.active.callUsers.push(comm.sender);
@@ -597,7 +599,7 @@ function commHandler(comm, target, isFromBuffer){
 						}
 					} else { // dropCall
 						if(target.length==37){
-							if(appcore.activeCall && appcore.activeCall == target){
+							if(listItem.active && listItem.active != -1){
 								clearTimeout(callTimeout);
 								var oldState = listItem.active.state;
 								var oldType = listItem.active.type;
@@ -693,11 +695,13 @@ function commHandler(comm, target, isFromBuffer){
 }
 function handleRoomCallQuit(target, quitter){
 	var listItem = appcore.list[appcore.listHash[target]];
+	console.log(target, quitter, listItem, listItem.active);
 	if(listItem.active && listItem.active.callUsers.indexOf(quitter) != -1){
 		listItem.active.callUsers.splice(listItem.active.callUsers.indexOf(quitter), 1);
 		if(listItem.active.callUsers.length == 0){
-			delete listItem.active;
-			api.emit("callUpdate", {state: "CALLING", oldState: "", target: target, callType: listItem.active.type});
+			var oldType = listItem.active.type;
+			listItem.active = -1;
+			api.emit("callUpdate", {state: "", oldState: "CALLING", target: target, callType: oldType});
 		} else {
 			api.emit("notify", {type: "callUserUpdate", event: "QUIT", target: listItem.id, uid: quitter, callType: listItem.active.type});
 		}
