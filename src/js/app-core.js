@@ -597,12 +597,14 @@ function commHandler(comm, target, isFromBuffer){
 						}
 					} else { // dropCall
 						if(target.length==37){
-							clearTimeout(callTimeout);
-							var oldState = listItem.active.state;
-							var oldType = listItem.active.type;
-							delete listItem.active;
-							appcore.activeCall = "";
-							api.emit("callUpdate", {state: "", oldState: oldState, target: target, callType: oldType});
+							if(appcore.activeCall && appcore.activeCall == target){
+								clearTimeout(callTimeout);
+								var oldState = listItem.active.state;
+								var oldType = listItem.active.type;
+								delete listItem.active;
+								appcore.activeCall = "";
+								api.emit("callUpdate", {state: "", oldState: oldState, target: target, callType: oldType});
+							}
 						} else {
 							handleRoomCallQuit(target, comm.sender);
 						}
