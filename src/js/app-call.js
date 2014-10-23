@@ -39,7 +39,7 @@ function startCallInput(group, type){
 		}
 	}, 50);
 	
-	$("#callDuration").text("Connecting");
+	$("#callDuration").text((group ? "Waiting" : "Connecting"));
 }
 function callUserUpdate(event, uid, type){
 	if(event == 'JOIN'){
