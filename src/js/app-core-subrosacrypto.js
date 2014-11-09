@@ -90,4 +90,49 @@
 		return md.digest().toHex();
 	}
 	
+	this.decryptComm = function(comm, key){
+		try {
+			var cipher = forge.cipher.createDecipher('AES-GCM', key);
+			if(comm.auxdata.length == 16){
+				cipher.start({iv: comm.auxdata}); // v0.23 and earlier had no auth tag
+			} else {
+				var iv = comm.auxdata.substr(0, 16);
+				var tag = comm.auxdata.substr(16, 16);
+				cipher.start({iv: iv, tagLength: 128, tag: tag});
+			}
+			cipher.update(forge.util.createBuffer(comm.data));
+			if(!cipher.finish()){
+				// auth tag failed
+				return {failedDecrypt: true, msg: "Auth tag doesn't match. This message was corrupted or tampered with."};
+			}
+		} catch (error) {
+			console.error("Failed to decrypt message in " + target, comm, error);
+			return {failedDecrypt: true, msg: "Failed to decrypt message."};
+		}
+		
+		var decryptedData;
+		try {
+			var decryptedData = forge.util.decodeUtf8(cipher.output.bytes()); // .getBytes() to empty buffer
+		} catch (error) {
+			var decryptedData = cipher.output.data;
+		}
+		
+		var decryptedObject;
+		try {
+			decryptedObject = JSON.parse(decryptedData);
+			// verify timestamp (counter replay attacks)
+			var fullTimestamp = 1400000000000 + decryptedObject.t * (60 * 60 * 1000);
+			if(Math.abs(fullTimestamp - comm.time) < 25 * 60 * 60 * 1000){
+				// timestamp OK (generous 25 - 26 hour grace period)
+			} else {
+				return {failedDecrypt: true, msg: "The sender's time is incorrect."};
+			}
+		} catch (e) {
+			console.log(e, decryptedData);
+			return {failedDecrypt: true, msg: "Failed to parse message object."};
+		}
+		
+		return decryptedObject;
+	}
+	
 }).call(window.SubrosaCrypto = {});

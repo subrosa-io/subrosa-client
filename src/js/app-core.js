@@ -1080,53 +1080,14 @@ function decryptComm(comm, target){
 	if(comm.decrypted){
 		// Internal comm
 		return comm.decrypted;
-	}
-	if(comm.type == 8 || comm.type == 9 || comm.type == 11){
+	} else if(comm.type == 8 || comm.type == 9 || comm.type == 11){
 		return JSON.parse(comm.data); // not end to end encrypted, system messages (eg joined room).
-	}
-	var listItem = appcore.list[appcore.listHash[target]];
-	try {
+	} else {
+		var listItem = appcore.list[appcore.listHash[target]];
 		var key = appcore.profileBlob.conversations[target];
-		var cipher = forge.cipher.createDecipher('AES-GCM', key);
-		if(comm.auxdata.length == 16){
-			cipher.start({iv: comm.auxdata}); // v0.23 and earlier had no auth tag
-		} else {
-			var iv = comm.auxdata.substr(0, 16);
-			var tag = comm.auxdata.substr(16, 16);
-			cipher.start({iv: iv, tagLength: 128, tag: tag});
-		}
-		cipher.update(forge.util.createBuffer(comm.data));
-		if(!cipher.finish()){
-			// auth tag failed
-			throw new Error("Auth tag doesn't match.");
-		}
-	} catch (error) {
-		console.error("Failed to decrypt message in " + target, comm, error);
-		return {failedDecrypt: true, msg: "Failed to decrypt message."};
+		
+		return SubrosaCrypto.decryptComm(comm, key);
 	}
-	
-	var decryptedData;
-	try {
-		var decryptedData = forge.util.decodeUtf8(cipher.output.bytes()); // .getBytes() to empty buffer
-	} catch (error) {
-		var decryptedData = cipher.output.data;
-	}
-	
-	var decryptedObject;
-	try {
-		decryptedObject = JSON.parse(decryptedData);
-		// verify timestamp (counter replay attacks)
-		var fullTimestamp = 1400000000000 + decryptedObject.t * (60 * 60 * 1000);
-		if(Math.abs(fullTimestamp - comm.time) < 25 * 60 * 60 * 1000){
-			// timestamp OK (generous 25 - 26 hour grace period)
-		} else {
-			decryptedObject = false;
-			throw new Error("Difference between client and server timestamp exceeds threshold.");
-		}
-	} catch (e) {
-		console.log(e, decryptedData);
-	}
-	return (decryptedObject ? decryptedObject : false);
 }
 api.on("sendComm", function(data){
 	// data.target data.type data.message ( object {} )
