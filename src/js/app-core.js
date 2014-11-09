@@ -161,18 +161,18 @@ api.on("register", function(data){
 	
 	var profileBlobJson = JSON.stringify(profileBlob);
 	
-	var derivedKeyObj = SubrosaCrypto.createDerivedKey(data.password);
-	
-	var iv = forge.random.getBytesSync(16);
-	var cipher = forge.cipher.createCipher('AES-CBC', derivedKeyObj.derivedKey);
-	cipher.start({iv: iv});
-	cipher.update(forge.util.createBuffer(profileBlobJson));
-	cipher.finish();
-	var cipherOutput = btoa(cipher.output.data); 
-	
-	var encryptedBlob = {iv: iv, kdf: derivedKeyObj.kdf, salt: derivedKeyObj.salt, data: cipherOutput};
-	
-	appcore.sockemit("register", {encryptedBlob: encryptedBlob, publicKey: publicKey, username: data.username, displayname: data.displayname, email: data.email, newsletter: data.newsletter, challenge: data.challenge, captcha: data.captcha, derivedKeyHash: derivedKeyObj.derivedKeyHash});
+	SubrosaCrypto.createDerivedKey(data.password, function(derivedKeyObj){
+		var iv = forge.random.getBytesSync(16);
+		var cipher = forge.cipher.createCipher('AES-CBC', derivedKeyObj.derivedKey);
+		cipher.start({iv: iv});
+		cipher.update(forge.util.createBuffer(profileBlobJson));
+		cipher.finish();
+		var cipherOutput = btoa(cipher.output.data); 
+		
+		var encryptedBlob = {iv: iv, kdf: derivedKeyObj.kdf, salt: derivedKeyObj.salt, data: cipherOutput};
+		
+		appcore.sockemit("register", {encryptedBlob: encryptedBlob, publicKey: publicKey, username: data.username, displayname: data.displayname, email: data.email, newsletter: data.newsletter, challenge: data.challenge, captcha: data.captcha, derivedKeyHash: derivedKeyObj.derivedKeyHash});
+	});
 });
 appcore.sockon("register", function(data){
 	if(data.status == "OK"){
@@ -203,16 +203,16 @@ appcore.sockon("loginMain", function(data){
 		if(data.salt){
 			var password = appcore.passwordTempHolder;
 			
-			var derivedKeyObj = SubrosaCrypto.getDerivedKey(password, data.salt, data.kdf);
-			
-			appcore.derivedKeyKdf = derivedKeyObj.kdf;
-			appcore.derivedKeySalt = derivedKeyObj.salt;
-			appcore.derivedKey = derivedKeyObj.derivedKey;
-			appcore.derivedKeyHash = derivedKeyObj.derivedKeyHash;
-			
-			api.emit("saveDerivedKey", {key: appcore.derivedKey, salt: appcore.derivedKeySalt, kdf: appcore.derivedKeyKdf}); // remember me
-			
-			appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: appcore.derivedKeyHash});
+			SubrosaCrypto.getDerivedKey(password, data.salt, data.kdf, function(derivedKeyObj){
+				appcore.derivedKeyKdf = derivedKeyObj.kdf;
+				appcore.derivedKeySalt = derivedKeyObj.salt;
+				appcore.derivedKey = derivedKeyObj.derivedKey;
+				appcore.derivedKeyHash = derivedKeyObj.derivedKeyHash;
+				
+				api.emit("saveDerivedKey", {key: appcore.derivedKey, salt: appcore.derivedKeySalt, kdf: appcore.derivedKeyKdf}); // remember me
+				
+				appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: appcore.derivedKeyHash});
+			});
 		} else {
 			api.emit("loginMainResult", data);
 		}
@@ -228,7 +228,11 @@ appcore.sockon("loginMain", function(data){
 			try {
 				profileBlob = JSON.parse(cipherOutput);
 			} catch (exception) {
-				api.emit("loginMainResult", {status: "FAIL", message: "Decryption has failed - the encrypted data became corrupt."});
+				console.log("Base64 of decrypted profileBlob: ", btoa(cipherOutput));			
+				console.log("Base64 of ciphertext: ", btoa(encryptedBlob));
+				console.log("Base64 of IV: ", btoa(data.iv));
+				console.log("**SENSITIVE** Base64 of derived key: ", btoa(appcore.derivedKey));
+				api.emit("loginMainResult", {status: "FAIL", message: "Decryption has failed - the encrypted data became corrupt. Debug data logged in console."});
 			}
 			if(profileBlob){
 				appcore.profileBlob = profileBlob;
@@ -337,36 +341,41 @@ api.on("changeStatus", function(data){
 	appcore.sockemit("changeStatus", {status: parseInt(data.status)});
 });
 api.on("changeProfile", function(data){
-	if(data.displayname && data.displayname != appcore.displayname){
+	if(data.displayname && data.displayname != appcore.displayname)
 		appcore.displayname = data.displayname.substr(0, 30);
-	}
-	if(data.oldpass && data.newpass){
-		var currentDerivedKeyObj = SubrosaCrypto.getDerivedKey(data.oldpass, appcore.derivedKeySalt, appcore.derivedKeyKdf);
-		if(currentDerivedKeyObj.derivedKeyHash != appcore.derivedKeyHash){
-			api.emit("notify", {type: "changePassOldWrong"});
-			return;
-		}
-		
-		data.oldDerivedKeyHash = appcore.derivedKeyHash;
-		
-		var newDerivedKeyObj = SubrosaCrypto.createDerivedKey(data.newpass);
-		
-		appcore.derivedKeyKdf = newDerivedKeyObj.kdf;
-		appcore.derivedKeySalt = newDerivedKeyObj.salt;
-		appcore.derivedKey = newDerivedKeyObj.derivedKey;
-		appcore.derivedKeyHash = newDerivedKeyObj.derivedKeyHash;
-		
-		updateBlob(true, 'changeProfile');
-		data.oldpass = "";
-		data.newpass = "";
-		data.derivedKeyHash = appcore.derivedKeyHash;
-		data.derivedKeySalt = appcore.derivedKeySalt;
-		data.derivedKeyKdf = appcore.derivedKeyKdf;
-	}
 	if(data.bgColor)
 		appcore.bgColor = data.bgColor;
+	if(data.oldpass && data.newpass){
 		
-	appcore.sockemit("changeProfile", data);
+		var oldPasswordWrong = -1;
+		
+		SubrosaCrypto.getDerivedKey(data.oldpass, appcore.derivedKeySalt, appcore.derivedKeyKdf, function(currentDerivedKeyObj){
+			if(currentDerivedKeyObj.derivedKeyHash != appcore.derivedKeyHash){
+				api.emit("notify", {type: "changePassOldWrong"});
+			} else {
+				
+				data.oldDerivedKeyHash = appcore.derivedKeyHash;
+		
+				SubrosaCrypto.createDerivedKey(data.newpass, function(newDerivedKeyObj){			
+					appcore.derivedKeyKdf = newDerivedKeyObj.kdf;
+					appcore.derivedKeySalt = newDerivedKeyObj.salt;
+					appcore.derivedKey = newDerivedKeyObj.derivedKey;
+					appcore.derivedKeyHash = newDerivedKeyObj.derivedKeyHash;
+					
+					updateBlob(true, 'changeProfile');
+					data.oldpass = "";
+					data.newpass = "";
+					data.derivedKeyHash = appcore.derivedKeyHash;
+					data.derivedKeySalt = appcore.derivedKeySalt;
+					data.derivedKeyKdf = appcore.derivedKeyKdf;
+					
+					appcore.sockemit("changeProfile", data);
+				});
+			}
+		});
+	} else {
+		appcore.sockemit("changeProfile", data);
+	}
 });
 api.on("changeGroupInfo", function(data){
 	var listItem = appcore.list[appcore.listHash[data.target]];
