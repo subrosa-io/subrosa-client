@@ -41,10 +41,6 @@ function startScreen(){
 	$("#startScreen").css("position", "relative").show();
 	$("#startScreenContent").fadeIn(250);
 	layScreen();
-	$("#createAccountBtn").click(function(){
-		if(!$(this).hasClass("disabled"))
-			createAccountScreen();
-	});
 	
 	if($("#loginUsername").val().length == 0 && window.localStorage && localStorage.getItem("lastUsername")){
 		try {
@@ -64,9 +60,6 @@ function startScreen(){
 	
 	$("#header").children().hide();
 	
-	if(document.location.protocol == "http:" && document.location.hostname != "localhost" && document.location.hostname != "127.0.0.1"){
-		$("#httpWarning").removeClass("hide");
-	}
 	$("#versionString").text(appcore.version);
 }
 function createAccountScreen(){
@@ -76,11 +69,55 @@ function createAccountScreen(){
 	$("#backToStartScreen").show();
 }
 function hooks(){
+	var network = "wss://subrosa.io/server/";
+	if(window.localStorage && localStorage.getItem){
+		if(localStorage.getItem("network") && localStorage.getItem("network").length > 6){
+			network = localStorage.getItem("network");
+		}
+	}
+	if(document.location.hash == "#local")
+		network = "ws://" + document.location.hostname + "/server/";
+	
+	api.emit("connect", {network: network});
+	$("#networkString").text("Network: " + network.split("://")[1].replace("/server/", ""));
+	$("#networkControlInput").val(network);
+	
+	startScreenHooks();
 	createAccountHooks();
 	mainAppHooks();
 	
 	$("form").submit(function(e){
 		e.preventDefault();
+	});
+}
+function startScreenHooks(){
+	$("#createAccountBtn").click(function(){
+		if(!$(this).hasClass("disabled"))
+			createAccountScreen();
+	});
+	
+	$("#networkControlToggle").click(function(){
+		if(document.location.hostname == "project.com"){
+			var win = window.open("https://subrosa.io/help/how-can-i-connect-to-other-subrosa-networks", "_blank");
+			win.focus();
+		} else {
+			$("#networkControl").show();
+			$("#networkControlInput").focus();
+			$("#networkControlToggle,#networkString").hide();
+		}
+	});
+	
+	$("#networkControlAccept").click(function(){
+		var newNetwork = $("#networkControlInput").val();
+		if(newNetwork.length){
+			api.emit("connect", {network: newNetwork});
+			if(window.localStorage && localStorage.setItem){
+				localStorage.setItem("network", newNetwork);
+			}
+		}
+		$("#networkControl").hide();
+		$("#networkString").text("Network: " + newNetwork.split("://")[1].replace("/server/", ""));
+		$("#networkControlToggle,#networkString").show();
 	});
 }
 var checkUsernameTimeout = null;
@@ -270,9 +307,11 @@ function createAccountHooks(){
 		if(data.status == "FAIL"){
 			$("#loginErrorMessage").text(data.message);
 			
-			localStorage.removeItem("savedDerivedKey"); // clear 'remember me'
-			localStorage.removeItem("savedDerivedKeySalt")
-			localStorage.removeItem("savedDerivedKeyKdf")
+			if(window.localStorage && window.localStorage.removeItem){
+				localStorage.removeItem("savedDerivedKey"); // clear 'remember me'
+				localStorage.removeItem("savedDerivedKeySalt")
+				localStorage.removeItem("savedDerivedKeyKdf")
+			}
 		} else if(data.status == "OK"){
 			loggedInCalls();
 			mainApp();
@@ -827,6 +866,9 @@ function mainAppHooks(){
 	});
 	$("#mediaTest .close").click(function(){
 		$("#testUserMedia").click();
+	});
+	$("#aboutSubrosa").click(function(){
+		$.modal("about");
 	});
 	$("#errorReporterReport").click(function(){
 		api.emit("sendErrorReport", {trace: $("#errorReportTrace").text()});

@@ -164,6 +164,9 @@ a:hover {
 	margin-right: 7px;
 	float: left;
 }
+#networkControlToggle {
+	cursor: pointer;
+}
 #errorNotice {
 	color: red;
 }

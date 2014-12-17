@@ -14,9 +14,6 @@
 	}
 	this.getDerivedKey = function(password, salt, kdf, callback){
 		if(kdf == "sc1"){
-			//var uint8Key = Scrypt.crypto_scrypt(Scrypt.encode_utf8(password), Scrypt.encode_utf8(salt), 8192, 8, 1, 32);
-			//var derivedKey = Scrypt.decode_latin1(uint8Key);
-			
 			scrypt(password, salt, 13, 8, 32, 1000, function(a){
 				var derivedKey = atob(a);
 				var derivedKeyHash = forge.sha256.create().update(derivedKey).digest().toHex();
@@ -24,7 +21,6 @@
 				callback({derivedKey: derivedKey, derivedKeyHash: derivedKeyHash, salt: salt, kdf: kdf});
 				
 			}, "base64");
-			
 		} else if(kdf == "pb1"){
 			var derivedKey = forge.pbkdf2(password, salt, 10000, 32);
 			var derivedKeyHash = forge.sha256.create().update(derivedKey).digest().toHex();

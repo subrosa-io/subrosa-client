@@ -61,6 +61,11 @@ textarea {
 input[type="text"], input[type="password"] {
 	width: 175px;
 }
+input[type="text"].input-tiny {
+	height: 8px;
+	font-size: 80%;
+	width: 125px;
+}
 input.input-large {
 	font-size: 110%;
 	padding: 7px 11px 7px 8px;

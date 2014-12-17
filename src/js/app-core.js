@@ -14,12 +14,9 @@ var api = {
 		this.map[type].push(handler)
 	}
 };
-var appcore = {version: 0.35, connected: false,sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeyKdf:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferReplace: [], bufferReceivedHash: [], userList: [], currentUploadTarget:""};
+var appcore = {version: 1.00, connected: false, network: "", sock:null,sockbuffer:[],write:null,map:{},generatedRSAKey: null,username: "",displayname:"",uid:"",passwordTempHolder:"",pubKey:"",derivedKeyKdf:"",derivedKeySalt:"",derivedKey:"",derivedKeyHash: "",activeCall:"",list:[],listHash:{},profileBlob:{},reconnect:-1, bufferReplace: [], bufferReceivedHash: [], userList: [], currentUploadTarget:""};
 
 appcore.sockemit = function(type, message){
-	if(!appcore.sock){
-		throw new Error("No socket is defined.");
-	}
 	try {
 		if(type != "raw"){
 			message.sockType = type;
@@ -47,54 +44,56 @@ appcore.sockon = function(type, callback){
 	}
 	appcore.map[type] = callback;
 };
-api.on("connect", function(){
-	if(!appcore.connected){
-		var server = "wss://subrosa.io/server/";
-		if(document.location.hash == "#local")
-			server = "ws://" + document.location.hostname + "/server/"; // connect to same hostname as page
-		if(appcore.sock)
-			appcore.sock.close();
-		appcore.sock = new WebSocket(server);
-		
-		appcore.sock.onopen = function(){
-			console.log("open");
-			appcore.connected = true;
-			clearInterval(appcore.reconnect);
-			appcore.reconnect=-1;
-			if(appcore.username){
-				appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: appcore.derivedKeyHash, resendBlob: false});
-				// resend sockbuffer when logged in
-			} else {
-				sendSockBuffer();
-			}
-			api.emit("connectionState", {state: "connected"});
+api.on("connect", function(data){
+	appcore.network = data.network;
+	if(appcore.connected){
+		appcore.reconnect = -2;
+		appcore.sock.close();
+		console.log("Closing existing connection..");
+	}
+	console.log("Connecting to " + data.network);
+	if(appcore.sock)
+		appcore.sock.close();
+	appcore.sock = new WebSocket(data.network);
+	
+	appcore.sock.onopen = function(){
+		console.log("open");
+		appcore.connected = true;
+		clearInterval(appcore.reconnect);
+		appcore.reconnect=-1;
+		if(appcore.username){
+			appcore.sockemit("loginMain", {step: 2, username: appcore.username, hash: appcore.derivedKeyHash, resendBlob: false});
+			// resend sockbuffer when logged in
+		} else {
+			sendSockBuffer();
 		}
-		appcore.sock.onmessage = function(event){
-			if(event.data[0] == "{"){
-				var data;
-				try{ data=JSON.parse(event.data) } catch(error){ return };
-				if(data.sockType){
-					if(appcore.map[data.sockType]){
-						appcore.map[data.sockType](data)
-					}
-				} else {
-					throw new Error("Unknown type " + data.sockType)
+		api.emit("connectionState", {state: "connected"});
+	}
+	appcore.sock.onmessage = function(event){
+		if(event.data[0] == "{"){
+			var data;
+			try{ data=JSON.parse(event.data) } catch(error){ return };
+			if(data.sockType){
+				if(appcore.map[data.sockType]){
+					appcore.map[data.sockType](data)
 				}
 			} else {
-				if(appcore.map[event.data[0]])
-					appcore.map[event.data[0]](event.data.substr(1));
+				throw new Error("Unknown type " + data.sockType)
 			}
+		} else {
+			if(appcore.map[event.data[0]])
+				appcore.map[event.data[0]](event.data.substr(1));
 		}
-		appcore.sock.onclose = function(e){
-			console.log("close", e);
-			appcore.connected = false;
-			if(appcore.reconnect==-1){
-				api.emit("connect");
-				appcore.reconnect=setInterval(function(){api.emit("connect");}, 2000)
-			}
-			closeEvents()
-			api.emit("connectionState", {state: "disconnected"});
+	}
+	appcore.sock.onclose = function(e){
+		console.log("close", e);
+		appcore.connected = false;
+		if(appcore.reconnect==-1){
+			api.emit("connect", {network: appcore.network});
+			appcore.reconnect=setInterval(function(){api.emit("connect", {network: appcore.network});}, 2000)
 		}
+		closeEvents()
+		api.emit("connectionState", {state: "disconnected"});
 	}
 });
 function sendSockBuffer(){
@@ -109,7 +108,6 @@ function sendSockBuffer(){
 	}
 	appcore.sockbuffer = [];
 }
-api.emit("connect", {});
 api.on("userExists", function(data){
 	if(data.username){
 		appcore.sockemit("userExists", {username: data.username});
@@ -185,7 +183,6 @@ api.on("loginMain", function(data){
 	// get KDF salt from server, derive key with Scrypt (or PBKDF2 for legacy users)
 	// hash derived key and send it to the server
 	// if the server verifies it, we get back the encrypted profileBlob along with the IV so we can decrypt
-	api.emit("connect", {});
 	appcore.sockemit("loginMain", {step: 1, username: data.username});
 	appcore.username = data.username;
 	appcore.passwordTempHolder = data.password;
