@@ -1,7 +1,7 @@
 subrosa-client
 ==============
 
-Secure, end to end encrypted messaging, voice and video chats.
+Secure, end to end encrypted messaging, voice and video chats. [Learn more](https://subrosa.io)
 
 You can access the hosted version of Subrosa here: https://subrosa.io/app/
 
@@ -16,6 +16,8 @@ usage
     default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws://yourhostname http://yourhostname
 
 Replace `yourhostname`.
+
+Subrosa's server is also open source. [Run your own network](https://github.com/subrosa-io/subrosa-server).
 
 build
 -----
