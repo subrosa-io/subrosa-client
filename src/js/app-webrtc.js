@@ -102,6 +102,14 @@ function createPeerConnection(uid) {
 			rtcSendSignal({type: "candidate", candidate: event.candidate.candidate, label: event.candidate.sdpMLineIndex, id: event.candidate.sdpMid}, pc.uid)
 		}
 	}
+	pc.oniceconnectionstatechange = function(event){
+		console.log(pc.iceConnectionState);
+		if(pc.iceConnectionState == 'disconnected'){
+			if(apprtc.mediastream && appcore.activeCall){
+				rtcReconnect(pc, true);
+			}
+		}
+	}
 	pc.onaddstream = handleRemoteStreamAdded;
 	pc.onremovestream = handleRemoteStreamRemoved;
 }
@@ -112,6 +120,23 @@ function rtcCall(pc){
 	}, function(error){
 		alert(error);
 	}, (apprtc.callVideo ? apprtc.sdpVideoConstraints : apprtc.sdpVoiceConstraints));
+}
+function rtcReconnect(pc, notifyOtherClient){
+	if(pc.inReconnectState)
+		return; // both parties must have got 'disconnect' for pc
+	
+	pc.close();
+	if(notifyOtherClient){
+		rtcSendSignal({type: "reconnect"}, pc.uid);
+	}
+	
+	createPeerConnection(pc.uid);
+	apprtc.pc[pc.uid].inReconnectState = true;
+	apprtc.pc[pc.uid].addStream(apprtc.mediaStream);
+	
+	if(initiateFirst(pc.uid)){
+		rtcCall(apprtc.pc[pc.uid]);
+	}
 }
 function rtcSetVideoMute(muted){
 	if(apprtc.localVideoPanel){
@@ -131,6 +156,7 @@ function handleRemoteStreamAdded(event){
 	}
 	
 	rtcSendSignal({type: "readyStep2"}, event.target.uid); // event.target is apprtc.pc[]
+	delete event.target.inReconnectState;
 	
 	setTimeout(function(){
 		if(apprtc.pc[event.target.uid]){
@@ -139,7 +165,11 @@ function handleRemoteStreamAdded(event){
 	}, 1000);
 }
 function handleRemoteStreamRemoved(event){
-	
+	if(apprtc.callVideo){
+		appcall.removeVideoPanel(apprtc.pc[event.target.uid].playerID);
+	} else {
+		appcall.removeAudioPlayer(apprtc.pc[event.target.uid].playerID);
+	}
 }
 function rtcProcessSignal(object, to, sender){
 	if(object.type == "candidate"){
@@ -170,6 +200,8 @@ function rtcProcessSignal(object, to, sender){
 		if(apprtc.pc[sender]){
 			apprtc.pc[sender].setRemoteDescription(new RTCSessionDescription(object.sessionDescription));
 		}
+	} else if(object.type == "reconnect" && to == appcore.uid){
+		rtcReconnect(apprtc.pc[sender], false);
 	} else {
 		console.log("Discarding RTC signal", object, to, sender);
 	}
