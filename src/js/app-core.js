@@ -422,10 +422,11 @@ api.on("keyExchange", function(data){
 		throw new Error("keyExchange called when it is not ready");
 	}
 	if(!appcore.profileBlob.conversations[listItem.id]){
+		var clientTs = new Date().getTime() - 1000;
 		appcore.sockemit("comm", {type: 1, target: listItem.id, data: listItem.keyExchange.encrypted, auxdata: listItem.keyExchange.signature});
 		// The local keyExchange comm needs to have a timestamp before any messages that triggered it.
 		// Hack this by making it one second earlier.
-		commHandler({type: 1, target: listItem.id, data: listItem.keyExchange.encrypted, auxdata: listItem.keyExchange.signature, time: new Date().getTime() - 1000});
+		commHandler({type: 1, target: listItem.id, data: listItem.keyExchange.encrypted, auxdata: listItem.keyExchange.signature, time: clientTs});
 		appcore.profileBlob.conversations[listItem.id] = listItem.keyExchange.convKey;
 		updateBlob(true, 'keyExchange');
 	}
@@ -480,9 +481,8 @@ api.on("kickUser", function(data){
 	}
 	appcore.sockemit("kickUser", data);
 });
-appcore.sockon("comm", function(d){
-	commHandler(d);
-});
+appcore.sockon("comm", commHandler);
+
 var callTimeout;
 function commHandler(comm, target, isFromBuffer){
 	if(!target)
@@ -511,10 +511,8 @@ function commHandler(comm, target, isFromBuffer){
 	if(comm.type == 1){
 		if(comm.sender != appcore.uid){ // Don't keyExchange if it's my keyExchange
 			if(!appcore.profileBlob.conversations[target]){ // Don't keyExchange if already done so
-				
 				var myPrivateKey = forge.pki.privateKeyFromPem(appcore.profileBlob.privateKey);
 				var convKey = SubrosaCrypto.processKeyExchange(comm.data, comm.auxdata, comm.pubKey, myPrivateKey);
-				
 				if(convKey){
 					appcore.profileBlob.conversations[target] = convKey;
 					updateBlob(true, 'processKeyExchange');
@@ -528,9 +526,9 @@ function commHandler(comm, target, isFromBuffer){
 		appcore.sockemit("clearHistory", {target: target, time: comm.time});
 	} else {
 		var obj = decryptComm(comm, target);
-		if(obj.failedDecrypt){
+		
+		if(obj.failedDecrypt)
 			comm.type = 2;
-		}
 		if(obj){
 			
 			var userInfo = getUserItem(comm.sender);
@@ -1083,7 +1081,16 @@ function decryptComm(comm, target){
 		var listItem = appcore.list[appcore.listHash[target]];
 		var key = appcore.profileBlob.conversations[target];
 		
-		return SubrosaCrypto.decryptComm(comm, key);
+		if(listItem.convKeyAlt){
+			var mainKeyDecrypt = SubrosaCrypto.decryptComm(comm, key);
+			if(mainKeyDecrypt.failedDecrypt){
+				return SubrosaCrypto.decryptComm(comm, listItem.convKeyAlt);
+			} else {
+				return mainKeyDecrypt;
+			}
+		} else {
+			return SubrosaCrypto.decryptComm(comm, key);
+		}
 	}
 }
 api.on("sendComm", function(data){
@@ -1271,6 +1278,29 @@ function updateBlob(force, info){
 			appcore.profileBlob = newProfileBlob;
 		}
 	}
+}
+appcore.sockon("reloadNeeded", function(data){
+	if(data.raceCondition){
+		appcore.profileBlob.conversations[data.raceCondition] = "";
+		updateBlob(true, "debugResetConv");
+		alert("A rare race condition occurred. Subrosa will automatically reload to recover. You will need to perform the action again.");
+	} else {
+		alert(data.message);
+	}
+	setTimeout(function(){
+		appcore.profileBlob.props["disableConfirmClosing"] = true;
+		document.location.reload();
+	}, 500);
+});
+function debugResetConv(){
+	appcore.sockemit("clearHistory", {target: currentTab});
+	appcore.profileBlob.conversations[currentTab] = "";
+	updateBlob(true, "debugResetConv");
+	alert("Conversation has been reset. Subrosa will automatically reload. The other party must also perform this step before exchanging any messages.");
+	setTimeout(function(){
+		appcore.profileBlob.props["disableConfirmClosing"] = true;
+		document.location.reload();
+	}, 500);
 }
 function randomUID(length){
     var s= '';
