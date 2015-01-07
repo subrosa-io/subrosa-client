@@ -1,6 +1,6 @@
 {
   "name": "subrosa-client",
-  "version": "1.01.0",
+  "version": "1.02.0",
   "description": "secure, end-to-end encrypted messaging, voice and video chats",
   "scripts": {
     "build": "node_modules/gulp/bin/gulp.js build"
