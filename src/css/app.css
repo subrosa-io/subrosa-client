@@ -250,11 +250,8 @@ a:hover {
 	border-left: 4px solid #94E8F8;
 	margin-left: 0px;
 }
-.sidebarListItem[data-status="room"] .listItemIcon {
-	margin-left: 4px;
-}
-.sidebarListItem[data-status="0"] .listItemTitle, .sidebarListItem[data-status="4"] .listItemTitle {
-	color: #7C7C7C;
+.sidebarListItem[data-status="0"] .listItemTitle, .sidebarListItem[data-status="4"] .listItemTitle, .sidebarListItem[data-status="-1"] .listItemTitle {
+	font-weight: normal;
 }
 .sidebarListItem .listItemTitle {
 	margin-left: 5px;

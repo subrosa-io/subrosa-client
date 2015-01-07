@@ -121,7 +121,7 @@ function layContent(header, body){
 					$("#unblockButton").hide();
 				}
 			} else {
-				convHeader.find("#convPicture").attr("data-status", "");
+				convHeader.find("#convPicture").attr("data-status", "-1");
 				convHeader.find("#convDisplayName").text(listItem.name);
 				layUsers();
 				
@@ -228,7 +228,17 @@ function layContent(header, body){
 			curTab.find("#convText")[0].scrollTop = curTab.find("#convText")[0].scrollHeight;
 		}
 		layScreen();
-		$(".sidebarListItem[data-item='" + listItem.id + "']").attr("data-status", (typeof listItem.status != "undefined" ? listItem.status : ""));
+		
+		var dataStatus = listItem.status;
+		if(typeof dataStatus == "undefined"){
+			if(listItem.id.indexOf("-") != -1)
+				dataStatus = "";
+			else
+				dataStatus = "-1";
+		}
+		
+		$(".sidebarListItem[data-item='" + listItem.id + "']").attr("data-status", dataStatus);
+
 	}
 	document.getElementsByTagName("body")[0].style['display'] = 'block';
 }
@@ -312,7 +322,7 @@ function createItemHTML(type, item){
 			}
 			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv" data-status="' + (typeof item.status != 'undefined' ? item.status : "") + '">' + pinnedIcon + '<div class="unreadBadge">0</div><img src="' + (item.avatar ? escapeText(item.avatar) : 'img/noavatar.png') + '" class="listItemIcon" /><span class="listItemTitle">' + escapeText(item.displayname || item.username) + '</span> <br /><span class="listItemSubtitle">' + escapeText(subtitle)  + '</span></div>';
 		} else {
-			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv">' + pinnedIcon + '<div class="unreadBadge">0</div><img src="' + (item.avatar ? escapeText(item.avatar) : 'img/group.png') + '" class="listItemIcon" data-status="room" /><span class="listItemTitle">' + escapeText(item.name) + '</span> <br /><span class="listItemSubtitle">' + (item.active ? '<span class="inCallSubtitle">Group call</span>' : "Group chat") + '</span></div>';
+			return '<div class="sidebarListItem' + (currentTab==item.id ? ' activeItem' : '') + '" data-item="' + escapeText(item.id) + '" data-trigger="conv" data-status="-1">' + pinnedIcon + '<div class="unreadBadge">0</div><img src="' + (item.avatar ? escapeText(item.avatar) : 'img/group.png') + '" class="listItemIcon" data-status="room" /><span class="listItemTitle">' + escapeText(item.name) + '</span> <br /><span class="listItemSubtitle">' + (item.active ? '<span class="inCallSubtitle">Group call</span>' : "Group chat") + '</span></div>';
 		}
 	}
 }
