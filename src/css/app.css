@@ -241,21 +241,20 @@ a:hover {
 .sidebarListItem[data-status="1"] .listItemIcon {
 	border-left: 4px solid #42CC28;
 	margin-left: 0px;
+	font-weight: bold;
 }
 .sidebarListItem[data-status="2"] .listItemIcon {
 	border-left: 4px solid #DB6538;
 	margin-left: 0px;
+	font-weight: bold;
 }
 .sidebarListItem[data-status="3"] .listItemIcon {
 	border-left: 4px solid #94E8F8;
 	margin-left: 0px;
-}
-.sidebarListItem[data-status="0"] .listItemTitle, .sidebarListItem[data-status="4"] .listItemTitle, .sidebarListItem[data-status="-1"] .listItemTitle {
-	font-weight: normal;
+	font-weight: bold;
 }
 .sidebarListItem .listItemTitle {
 	margin-left: 5px;
-	font-weight: bold;
 	display: inline-block;
 	width: 1px; /* trick */
 	white-space: nowrap;
