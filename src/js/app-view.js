@@ -1086,8 +1086,11 @@ function friendlyTime(timeMs){
 		// 10:00am
 		var amOrPm = "am";
 		var ampmHour = theDate.getHours();;
-		if(theDate.getHours() >= 12){
+		if(theDate.getHours() > 12){
 			ampmHour = theDate.getHours() - 12;
+			amOrPm = "pm";
+		} else if(theDate.getHours() === 12){
+			ampmHour = 12;
 			amOrPm = "pm";
 		}
 		var paddedMinute = (theDate.getMinutes().toString().length == 1 ? "0" + theDate.getMinutes() : theDate.getMinutes());
