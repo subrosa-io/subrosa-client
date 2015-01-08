@@ -478,6 +478,7 @@ api.on("kickUser", function(data){
 	
 	if(listItem.users.indexOf(data.kicking)){
 		listItem.users.splice(listItem.users.indexOf(data.kicking), 1);
+		listItem.usercount--;
 	}
 	appcore.sockemit("kickUser", data);
 });
