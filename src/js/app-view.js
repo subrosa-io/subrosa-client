@@ -932,6 +932,9 @@ function changeTabTo(tab){
 		if(currentTrigger == "conv"){
 			convInputHolders[currentTab] = $("#convInput").val();
 			ConvModel.markRead(currentTab);
+			// Fix issue if viewport height is changed on a non-conv tab
+			$("#convText").empty();
+			$("#convBody").css("height", "");
 		}
 		$(".tab-" + currentTrigger).hide();
 		$(".sidebarListItem[data-item=" + currentTab + "]").removeClass("activeItem");
