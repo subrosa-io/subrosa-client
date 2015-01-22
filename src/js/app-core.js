@@ -67,6 +67,8 @@ api.on("connect", function(data){
 		} else {
 			sendSockBuffer();
 		}
+		clearInterval(checkHeartbeatInterval);
+		checkHeartbeatInterval = setInterval(checkHeartbeat, 30 * 1000);
 		api.emit("connectionState", {state: "connected"});
 	}
 	appcore.sock.onmessage = function(event){
@@ -126,7 +128,20 @@ function closeEvents(){
 appcore.sockon("log", function(data){
 	console.log("log event: " + data.msg);
 });
+
+var checkHeartbeatInterval = -1;
+var gotRecentHeartbeat = true;
+function checkHeartbeat() {
+	if (appcore.connected) {
+		if (!gotRecentHeartbeat) {
+			console.log("No recent heartbeat. Forcing disconnect..");
+			appcore.sock.close();
+		}
+		gotRecentHeartbeat = false;
+	}
+}
 appcore.sockon("*", function(data){
+	gotRecentHeartbeat = true;
 	api.emit("sendRawComm", "*"); // respond to heartbeat
 });
 appcore.sockon("userExists", function(data){
