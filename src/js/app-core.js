@@ -1153,6 +1153,7 @@ api.on("sendRawComm", function(data){
 appcore.sockon("ack", function(data){
 	var listItem = appcore.list[appcore.listHash[data.target]];
 	listItem.lastRead = data.sTs;
+	appcore.bufferReceivedHash[data.target + data.sTs] = true;
 	api.emit("notify", {type: "messageAck", clientTs: data.cTs, serverTs: data.sTs, target: data.target});
 });
 appcore.sockon("getPubKey", function(data){
