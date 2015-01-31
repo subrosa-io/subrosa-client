@@ -14,10 +14,13 @@ apprtc.sdpVoiceConstraints = {'mandatory': {'OfferToReceiveAudio':true}};
 apprtc.sdpVideoConstraints = {'mandatory': {'OfferToReceiveAudio':true,'OfferToReceiveVideo':true }};
 
 if (typeof webkitRTCPeerConnection != 'undefined') {
+	console.log("Set RTCPeerConneciton to webkit");
 	RTCPeerConnection = webkitRTCPeerConnection;
 } else if (typeof mozRTCPeerConnection != 'undefined') {
+	console.log("Set RTCPeerConnection to Mozilla");
 	RTCPeerConnection = mozRTCPeerConnection;
 } else if (typeof RTCPeerConnection == 'undefined') {
+	console.log("No supported RTC found.");
 	apprtc.supported = false;
 }
 if(typeof mozRTCSessionDescription != 'undefined'){
@@ -26,6 +29,7 @@ if(typeof mozRTCSessionDescription != 'undefined'){
 if(typeof mozRTCIceCandidate != 'undefined'){
 	RTCIceCandidate = mozRTCIceCandidate;
 }
+console.log("RTCPeerConnection:", typeof RTCPeerConnection);
 
 function rtcStart(mediaStream, group, video){
 	apprtc.mediaStream = mediaStream;
@@ -94,6 +98,7 @@ function rtcStop(){
 	apprtc.callVideo = null;
 }
 function createPeerConnection(uid) {
+	console.log("CreatePeerConnection: ", typeof RTCPeerConnection);
 	var pc = new RTCPeerConnection(apprtc.pc_config, apprtc.pc_constraints);
 	apprtc.pc[uid] = pc;
 	pc.uid = uid;
