@@ -1068,3 +1068,8 @@ p.userRankDesc {
 #communityButtons > #donate:hover {
 	background-color: #EC3F6F;
 }
+#linodeLogo {
+	vertical-align: middle;
+	margin-top: -5px;
+	height: 30px;
+}

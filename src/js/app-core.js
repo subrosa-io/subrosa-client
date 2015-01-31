@@ -308,9 +308,6 @@ appcore.sockon("newList", function(data){
 	}
 	data.object.waitingForBundle = true;
 	appcore.list.push(data.object);
-	if(data.object.active && data.object.id.length == 20){
-		api.emit("callUpdate", {state: "CALLING", oldState: "", target: data.object.id, callType: data.object.type});
-	}
 	
 	appcore.listHash[data.object.id] = appcore.list.length-1; 
 	
@@ -319,6 +316,10 @@ appcore.sockon("newList", function(data){
 	
 	if(!appcore.profileBlob.conversations[data.object.id])
 		api.emit("generateKeyExchange", {id: data.object.id});
+		
+	if(data.object.active && data.object.id.length == 20){
+		api.emit("callUpdate", {state: "CALLING", oldState: "", target: data.object.id, callType: data.object.type});
+	}
 });
 api.on("addList", function(data){
 	if(data.id){
