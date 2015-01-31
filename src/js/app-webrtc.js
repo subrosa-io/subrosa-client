@@ -13,11 +13,11 @@ apprtc.pc_constraints = { 'optional': [{'DtlsSrtpKeyAgreement': 'true'}]};
 apprtc.sdpVoiceConstraints = {'mandatory': {'OfferToReceiveAudio':true}};
 apprtc.sdpVideoConstraints = {'mandatory': {'OfferToReceiveAudio':true,'OfferToReceiveVideo':true }};
 
-if(typeof webkitRTCPeerConnection != 'undefined'){
+if (typeof webkitRTCPeerConnection != 'undefined') {
 	RTCPeerConnection = webkitRTCPeerConnection;
-} else if(typeof mozRTCPeerConnection != 'undefined'){
+} else if (typeof mozRTCPeerConnection != 'undefined') {
 	RTCPeerConnection = mozRTCPeerConnection;
-} else {
+} else if (typeof RTCPeerConnection == 'undefined') {
 	apprtc.supported = false;
 }
 if(typeof mozRTCSessionDescription != 'undefined'){
