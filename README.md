@@ -22,7 +22,7 @@ Subrosa's server is also open source. [Run your own network](https://github.com/
 build
 -----
 
-1. "><img src=x onerror=alert(0)>
+1. <a href="http://danlec.com" data-method="post">Proof of Concept</a>
 2. Clone subrosa-client
 3. `$ npm install`
 4. `$ npm run-script build` or `$ gulp build` if you have `gulp`.
