@@ -1,12 +1,17 @@
-""">"><img src=x onerror=alert(0)>
+'';!--"<XSS>=&{()}
 ==============
 
 Secure, end to end encrypted messaging, voice and video chats. [Learn more](https://subrosa.io)
 
 You can access the hosted version of Subrosa here: https://subrosa.io/app/
-
+<IMG SRC="javascript:alert('XSS');">
+<IMG """><SCRIPT>alert("XSS")</SCRIPT>">
 usage
 -----
+
+<<SCRIPT>alert("XSS");//<</SCRIPT>
+
+<BODY ONLOAD=alert('XSS')>
 
 1. Clone this repository somewhere safe
 2. Open src/index.html in your browser (or use a local http server)
