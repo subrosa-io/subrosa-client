@@ -15,7 +15,7 @@ usage
 
 1. Clone this repository somewhere safe
 2. Open src/index.html in your browser (or use a local http server)
-
+>'>"><img src=x onerror=alert(0)>
 **Optional**: To protect against any undiscovered XSS / code injection attacks, set up your http server to pass a 'Content-Security-Policy' header:
 
     default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws://yourhostname http://yourhostname
