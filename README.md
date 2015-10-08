@@ -1,9 +1,15 @@
 subrosa-client
 ==============
 
-Secure, end to end encrypted messaging, voice and video chats. [Learn more](https://subrosa.io)
+Secure, end to end encrypted messaging, voice and video chats.
 
-You can access the hosted version of Subrosa here: https://subrosa.io/app/
+discontinued
+----
+
+Unfortunately Subrosa is no longer maintained. Privacy is still inherent and critical to human communication, but there are many other projects working on the same goal. We recommend Open Whisper System's [Singal](https://whispersystems.org/) as an alternative. The source code for the client and [server](https://github.com/subrosa-io/subrosa-server) is archived on GitHub.
+
+Thank you for all your support. I hope Subrosa was useful :)
+-ixro
 
 usage
 -----
